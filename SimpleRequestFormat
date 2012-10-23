@@ -1,0 +1,28 @@
+Documentation of the Simple Request Format
+2012-10-22  Lipu Fei
+
+1. Description
+The simple request format is very easy to use, the syntax of which can be
+described as follows:
+  1) The request content consists of an arbitrary number of parameter-value
+     pairs that has the form
+         "parameter-name:value;"
+     each pair has a parameter name and a value, splitted by a ":" in between.
+     Each parameter-value pair is splitted by a ";". It is optional whether you
+     append a ";" at the end or not.
+
+  2) Simple comments are available in this format. A line starts with a "#"
+     is considered a comment line. Note that only comment lines are supported
+     here. You cannot do things like this:
+         "APP=/usr/bin/ffmpeg  # using ffmpeg as the application",
+     but you can use this instead:
+         # using ffmpeg as the application
+         APP=/usr/bin/ffmpeg
+
+  3) An example is as follow:
+         APP=/usr/bin/ffmpeg;
+         APP.PARAMS=-i a.avi -i b.avi -target ntsc-dvd
+         out.mpg;
+
+Note that it is recommended to use parameter names like "APP.PARAMS" and
+"CONFIG.ARRIVAL". These parameter names a more readable.

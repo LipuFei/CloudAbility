@@ -1,0 +1,73 @@
+ChangeLog for CloudScheduling project
+==================================================
+
+
+2012-10-18  Lipu Fei  Started this project.
+==================================================
+Changes:
+1. A scheduling framework has been created seems fine so far.
+
+Finished Works:
+1. The scheduling framework has been simply tested.
+2. The module org.cloudability.util.CloudConfig has been simply tested.
+
+Todos:
+1. Finish implementing the Job execution procedure. SSH modules in KOALA may be
+   needed.
+2. Create a more general job allocation policy framework for the scheduler.
+3. Create a more general resouce provisioning policy framework.
+4. Integrate the XML-RPC modules previous implemented into this project.
+5. Integrate the request listening modules.
+6. Design and implement a JSDL parser.
+
+Notes:
+1. The Job's execution procedure can first be implemented in a simplified way
+   which can satisfy the needs of in4392 lab. Then to think of a more general
+   way.
+2. Implementing a flexible framework for resource provisioning policies seems
+   to be very difficult and complicated. So far, this framework is sufficient
+   for the in4392 lab.
+3. JSDL parser can wait. It is better to design and create a simple job
+   description file format for submitting job, which can be utilized for in4392
+   lab.
+
+
+2012-10-19  Lipu Fei
+==================================================
+Fixes:
+1. Job's equals() function was not correct.
+
+Changes:
+1. Implemented equals() for VMInstance.
+2. Assigning a VM instance to a job is now moved from JobMonitor to the
+   allocator. It is allocator's responsibilty to get a job and a VM instance.
+3. A sort() has been implemented for JobQueue to sort the queue with a given
+   comparator.
+4. A base class of allocation policies has been implemented. A FCFSAllocator and
+   a helper class FCFSJobComparator have been implemented.
+5. Attribute arrivalTime has been added to Job.
+6. Provisioner, a base class for provisioning policies has been implemented. A
+   simple static provision policy has been implemented. 
+7. The allocation and provisioning logic has been moved from Scheduler to
+   Allocator.
+
+Todos:
+1. Add a finialization method for ResourceManager to stop the provisioning
+   policy thread.
+2. Integrate the Cloud Manipulators into this framework and complete the static
+   provisioning policy with it.
+3. Pofiler.
+4. Integrate Request Handler.
+
+
+2012-10-22  Lipu Fei
+==================================================
+Changes:
+1. A simple profiler has been added.
+2. The stopping of provisioner has been added in the resource manager.
+3. Client request handling modules have been added.
+4. A simple request parser has been implemented.
+5. Cloud broker has been added.
+
+Todos:
+1. Test them.
