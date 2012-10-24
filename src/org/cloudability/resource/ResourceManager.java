@@ -119,18 +119,6 @@ public class ResourceManager {
 	 */
 	public VMInstance getAvailableVM() {
 		VMInstance vm = this.provisioner.select();
-
-		String msg = "";
-		if (vm != null) {
-			msg = String.format(
-					"VM#%d has been selected by the provisioner.",
-					vm.getId());
-		}
-		else {
-			msg = "No VM instance available.";
-		}
-		//logger.debug(msg);
-
 		return vm;
 	}
 

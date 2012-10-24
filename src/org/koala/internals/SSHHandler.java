@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import com.trilead.ssh2.Connection;
 import com.trilead.ssh2.KnownHosts;
+import com.trilead.ssh2.SCPClient;
 import com.trilead.ssh2.SFTPv3Client;
 import com.trilead.ssh2.ServerHostKeyVerifier;
 import com.trilead.ssh2.Session;
@@ -25,24 +26,25 @@ public class SSHHandler {
 
 	private static Logger logger = Logger.getLogger(SSHHandler.class);
 
-	private static final String known_hosts = System.getenv("HOME")+"/.ssh/known_hosts";
+	private static final String known_hosts = System.getenv("HOME") + "/.ssh/known_hosts";
 	private static final String keyfile_dsa = System.getenv("HOME") + "/.ssh/id_dsa";
 	private static final String keyfile_rsa = System.getenv("HOME") + "/.ssh/id_rsa";
 	private static KnownHosts database = new KnownHosts();
 
-	private  String getKeyFile(){
-		if(new File(keyfile_dsa).exists()){
+	private String getKeyFile(){
+		if (new File(keyfile_dsa).exists()) {
 			return keyfile_dsa;
 		}
-		if(new File(keyfile_rsa).exists()){
+		if (new File(keyfile_rsa).exists()) {
 			return keyfile_rsa;
 		}
 		return null;
 	}
 
-	private Connection getConnection(String hostname) throws SSHException {
+	public Connection getConnection(String hostname, String username)
+				throws SSHException {
 		String priv_key = this.getKeyFile();
-		if (priv_key == null){
+		if (priv_key == null) {
 			logger.error("DM - Keyfile id_rsa or id_dsa not present in the user ~/.ssh/ directory");
 			throw new RuntimeException();
 		}
@@ -57,14 +59,17 @@ public class SSHHandler {
 
 			conn = new Connection(hostname);
 			conn.connect(new SimpleVerifier(database));
-			boolean isAuthenticated = conn.authenticateWithPublicKey(System.getenv("USER"), keyfile, keyfilePass);
-		
+
+			boolean isAuthenticated =
+					conn.authenticateWithPublicKey(
+							username, keyfile, keyfilePass);
+
 			if (isAuthenticated == false) {
 				logger.error("Authentication with the ssh public key failed");
 				throw new RuntimeException();
 			}
-		} catch(IOException e){
-			if(conn != null){
+		} catch(IOException e) {
+			if (conn != null) {
 				conn.close();
 			}
 			logger.error("SSH connection to the remote host has failed");
@@ -73,12 +78,13 @@ public class SSHHandler {
 		return conn;
 	}
 
-	public static synchronized Session getSession(String hostname) throws SSHException {
+	public static synchronized Session getSession(String hostname,
+				String username) throws SSHException {
 		SSHHandler ssh = new SSHHandler();
 		Session sess = null;
 		try {
-			Connection conn = ssh.getConnection(hostname);
-			sess =  conn.openSession();
+			Connection conn = ssh.getConnection(hostname, username);
+			sess = conn.openSession();
 		} catch(IOException e) {
 			logger.error("Failed to open SSH session with the remote host " + hostname);
 			throw new SSHException(e);
@@ -86,11 +92,12 @@ public class SSHHandler {
 		return sess;
 	}
 
-	public static synchronized SFTPv3Client getSftpClient(String hostname) throws SSHException {
+	public static synchronized SFTPv3Client getSftpClient(String hostname,
+				String username) throws SSHException {
 		SSHHandler ssh = new SSHHandler();
 		SFTPv3Client sftp = null;
 		try {
-			Connection conn = ssh.getConnection(hostname);
+			Connection conn = ssh.getConnection(hostname, username);
 			sftp = new SFTPv3Client(conn);
 		} catch(IOException e) {
 			logger.error("Failed to open SFTP connection to the remote host " + hostname);
@@ -99,11 +106,25 @@ public class SSHHandler {
 		return sftp;
 	}
 
-	private class SimpleVerifier implements ServerHostKeyVerifier{
+	public static synchronized SCPClient getScpClient(String hostname,
+				String username) throws SSHException {
+		SSHHandler ssh = new SSHHandler();
+		SCPClient scp = null;
+		Connection conn = ssh.getConnection(hostname, username);
+		try {
+			scp = conn.createSCPClient();
+		} catch (IOException e) {
+			logger.error("Failed to open SCP connection to the remote host " + hostname);
+			throw new SSHException(e);
+		}
+		return scp;
+	}
+
+	private class SimpleVerifier implements ServerHostKeyVerifier {
 		KnownHosts database;
 
-		public SimpleVerifier(KnownHosts database){
-			if (database == null){
+		public SimpleVerifier(KnownHosts database) {
+			if (database == null) {
 				throw new IllegalArgumentException();
 			}
 			this.database = database;
@@ -112,7 +133,7 @@ public class SSHHandler {
 		public boolean verifyServerHostKey(String hostname, int port, String serverHostKeyAlgorithm, byte[] serverHostKey)
 				throws IllegalStateException, IOException{
 			int result = database.verifyHostkey(hostname, serverHostKeyAlgorithm, serverHostKey);
-			switch (result){
+			switch (result) {
 			case KnownHosts.HOSTKEY_IS_OK:
 				return true;
 			case KnownHosts.HOSTKEY_IS_NEW:

@@ -8,7 +8,11 @@ import java.util.HashMap;
 
 import org.apache.log4j.BasicConfigurator;
 
+import com.trilead.ssh2.SFTPv3Client;
+import com.trilead.ssh2.SFTPv3FileHandle;
+
 import org.cloudability.resource.ResourceManager;
+import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.Job;
 import org.cloudability.scheduling.Scheduler;
 import org.cloudability.server.ClientRequestListener;
@@ -32,26 +36,78 @@ public class CloudAbility {
 		BasicConfigurator.configure();
 
 		/* common initialization */
+		//try {
+			//DataManager.initialize("config/cloud.config");
+			//ResourceManager.initialize();
+
+		//} catch (CloudConfigException e) {
+			// TODO Auto-generated catch block
+		//	e.printStackTrace();
+		//}
+
+		//testAll();
+		//testSCP();
+		testJob();
+
+		/* finalize resource manager */
+		//ResourceManager.instance().finalize();
+	}
+
+	public static void testJob() {
 		try {
 			DataManager.initialize("config/cloud.config");
-			ResourceManager.initialize();
+			VMInstance vm = new VMInstance(1);
+			vm.setIpAddress("10.141.3.134");
 
+			HashMap<String, String> p = new HashMap<String, String>();
+			p.put("REMOTE_DIR", "/opt");
+			p.put("APP.LOCAL", "/home/lfei/in4392/largelab/ffmpeg-centos.tar.gz");
+			p.put("APP.REMOTE", "ffmpeg/bin/ffmpeg");
+			p.put("APP.PARAMS", "-i /opt/cloudatlas-trailer1b_h1080p.mov -target ntsc-dvd -y /opt/output.mov");
+			p.put("INPUT.LOCAL", "/home/lfei/in4392/largelab/cloudatlas-trailer1b_h1080p.mov");
+			p.put("INPUT.REMOTE", "cloudatlas-trailer1b_h1080p.mov");
+			p.put("OUTPUT.LOCAL", "/home/lfei/in4392/largelab");
+			p.put("OUTPUT.REMOTE", "output.mov");
+			Job job = new Job(1, p);
+			job.setVMInstance(vm);
+
+			Thread t = new Thread(job);
+			t.start();
+
+			t.join();
+			
 		} catch (CloudConfigException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		testAll();
-		//testSCP();
-		//testConfig();
-		//testScheduler();
-
-		/* finalize resource manager */
-		ResourceManager.instance().finalize();
 	}
 
 	public static void testSCP() {
-		//SSHHandler.getSession("");
+		try {
+			SFTPv3Client sftpClient =
+					SSHHandler.getSftpClient("10.141.3.134", "root");
+
+			/* upload a file */
+			SFTPv3FileHandle fileHandle =
+					sftpClient.createFile("/opt/test.dat");
+
+			String data = "This is a test.\n";
+
+			sftpClient.write(fileHandle, 0, data.getBytes("UTF-8"), 0,
+					data.getBytes("UTF-8").length);
+
+			/* close */
+			sftpClient.closeFile(fileHandle);
+			sftpClient.close();
+
+		} catch (SSHException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void testAll() {
@@ -78,48 +134,6 @@ public class CloudAbility {
 				/* stop scheduler */
 				scheduler.setToStop();
 				schedulerThread.join();
-				break;
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public static void testConfig() {
-		HashMap<String, String> configMap =
-				DataManager.instance().getConfigMap();
-
-		String serverUrl = configMap.get("ONE.XMLRPC_URL");
-		String username = configMap.get("ONE.USERNAME");
-		String password = configMap.get("ONE.PASSW0RD");
-		String vmTemplate = configMap.get("ONE.VM_TEMPLATE");
-
-		System.out.println("server url: " + serverUrl);
-		System.out.println("username: " + username);
-		System.out.println("password: " + password);
-		System.out.println("vm template: " + vmTemplate);
-	}
-
-	public static void testScheduler() {
-		Job[] jobs = new Job[5];
-		for (int i = 0; i < 5; i++) {
-			jobs[i] = new Job(i);
-			DataManager.instance().getPendingJobQueue().addJob(jobs[i]);
-		}
-
-		Scheduler scheduler = new Scheduler();
-		Thread thread = new Thread(scheduler);
-		thread.start();
-
-		try {
-			while (true) {
-				System.in.read();
-				scheduler.setToStop();
-				thread.join();
 				break;
 			}
 		} catch (IOException e) {

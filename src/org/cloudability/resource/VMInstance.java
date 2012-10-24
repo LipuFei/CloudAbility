@@ -19,6 +19,8 @@ public class VMInstance {
 
 	private int id;
 	private VMStatus status;
+	private String ipAddress;
+
 	private AtomicInteger jobsAssigned;	/* number of jobs assigned to this VM */
 
 	/**
@@ -55,12 +57,20 @@ public class VMInstance {
 		return this.status;
 	}
 
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
+	}
+	public String getIpAddress() {
+		return this.ipAddress;
+	}
+
 	/**
 	 * Assigns a job to this VM instance.
 	 */
 	public void assign() {
 		this.jobsAssigned.incrementAndGet();
 	}
+
 	/**
 	 * Frees a job to this VM instance.
 	 */
@@ -71,6 +81,7 @@ public class VMInstance {
 			ResourceManager.instance().getVMList().notifyAll();
 		}
 	}
+
 	/**
 	 * Get the number of jobs running on this VM instance.
 	 */

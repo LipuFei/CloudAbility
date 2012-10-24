@@ -53,9 +53,7 @@ public class SimpleRequestParser extends RequestParser {
 		}
 
 		/* create a job */
-		String app = parameterMap.get("app");
-		String params = parameterMap.get("params");
-		Job job = new Job(Job.generateJobID(), app, params);
+		Job job = new Job(Job.generateJobID(), parameterMap);
 		job.setArrivalTime(System.currentTimeMillis());
 		job.setStatus(JobStatus.PENDING);
 

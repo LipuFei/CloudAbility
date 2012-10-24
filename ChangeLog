@@ -71,3 +71,28 @@ Changes:
 
 Todos:
 1. Test them.
+
+
+2012-10-23  Lipu Fei
+==================================================
+Changes:
+1. The scheduling procedure has been changed. Now the scheduler first checks for
+   available VM instance and then gets a job, because it makes no sense to
+   allocate a job with no idle VM instance available.
+2. The job now has a hashmap that contains all related parameters it needs.
+3. Ported and tested the SSH module in KOALA.
+4. Started implementing the job execution procedure.
+5. 
+
+Todos:
+1. For now, the scheduler doesn't keep track on each job and its monitor, and
+   the finalization of the scheduler simply does nothing. It would be better to
+   keep track on the monitors, so that when an exit signal has been raised, the
+   scheduler can stop these monitors and their jobs gracefully.
+2. The uploading and downloading of files during the job execution are simple
+   blocking methods. There may be a better and more efficient way to do this.
+3. Change the authentication of SSH module to using username and password
+   instead of using known database, because VM instances are created dynamically
+   and you don't always have them in you known_hosts.
+4. Find a good way to monitor the VM instances.
+

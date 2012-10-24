@@ -26,3 +26,11 @@ described as follows:
 
 Note that it is recommended to use parameter names like "APP.PARAMS" and
 "CONFIG.ARRIVAL". These parameter names a more readable.
+
+2. Known Parameters
+The table below illustrates the known parameters being used currently.
+
+Parameter Name	|	Description
+APP				|	APP:/usr/bin/grep, the application to execute.
+
+
