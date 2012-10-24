@@ -70,8 +70,26 @@ public class CloudAbility {
 		listenThread.start();
 
 		try {
+			int i = 0;
 			while (true) {
 				System.in.read();
+
+				/* at most 5 jobs */
+				if (i++ < 5) {
+					HashMap<String, String> p = new HashMap<String, String>();
+					p.put("REMOTE_DIR", "/opt");
+					p.put("APP.LOCAL", "/home/lfei/in4392/largelab/ffmpeg-centos.tar.gz");
+					p.put("APP.REMOTE", "ffmpeg/bin/ffmpeg");
+					p.put("APP.PARAMS", String.format("-i /opt/cloudatlas-trailer1b_h1080p.mov -target ntsc-dvd -y /opt/output%d.mov", i));
+					p.put("INPUT.LOCAL", "/home/lfei/in4392/largelab/cloudatlas-trailer1b_h1080p.mov");
+					p.put("INPUT.REMOTE", "cloudatlas-trailer1b_h1080p.mov");
+					p.put("OUTPUT.LOCAL", "/home/lfei/in4392/largelab");
+					p.put("OUTPUT.REMOTE", String.format("output%d.mov", i));
+					Job job = new Job(i, p);
+					DataManager.instance().getPendingJobQueue().addJob(job);
+					continue;
+				}
+
 				/* stop listener */
 				listener.stopListening();
 				listenThread.join();

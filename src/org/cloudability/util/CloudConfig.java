@@ -62,8 +62,8 @@ public class CloudConfig {
 					String error = "Parameter already exists: " + line;
 					throw new CloudConfigException(error);
 				}
-				/* check if parameter or value is empty */
-				if (params[0].isEmpty() || params[1].isEmpty()) {
+				/* check if parameter is empty */
+				if (params[0].isEmpty()) {
 					reader.close();
 
 					/* log and throw exception */

@@ -196,7 +196,7 @@ public class Job implements Runnable {
 			Session session = SSHHandler.getSession(vmIp, vmUsername);
 
 			/* first uncompress the execution tarball */
-			msg = "Extracting the tarball...";
+			msg = String.format("JOB#%d is extracting the tarball...", id);
 			logger.debug(msg);
 			String cmd = String.format("tar xzvf %s/%s --directory=%s",
 					RemoteDir, tarballName, RemoteDir);
@@ -236,7 +236,7 @@ public class Job implements Runnable {
 			session.close();
 
 			/* execute the job */
-			msg = "Executing the job...";
+			msg = String.format("JOB#%d is executing...", id);
 			logger.debug(msg);
 			cmd = String.format("%s/%s %s",
 					RemoteDir, appRemote, params);
@@ -280,7 +280,7 @@ public class Job implements Runnable {
 			session.close();
 
 			/* STEP #3. download output files */
-			msg = "Downloading the output file...";
+			msg = String.format("JOB#%d is downloading the output file......", id);
 			logger.debug(msg);
 			logger.debug(RemoteDir + "/" + outputRemote);
 			logger.debug(outputLocal);
