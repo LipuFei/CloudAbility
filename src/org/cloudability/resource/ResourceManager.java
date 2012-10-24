@@ -3,11 +3,14 @@
  */
 package org.cloudability.resource;
 
+import java.lang.Thread.State;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
+
 import org.cloudability.broker.CloudBroker;
+import org.cloudability.resource.VMInstance.VMStatus;
 import org.cloudability.resource.policy.Provisioner;
 import org.cloudability.resource.policy.StaticProvisioner;
 import org.cloudability.util.BrokerException;
@@ -30,6 +33,9 @@ public class ResourceManager {
 	/* list of VM instances */
 	private LinkedList<VMInstance> vmList;
 
+	/* some nasty stuff */
+	private LinkedList<VMAgent> vmAgentThreadList;
+
 	/* provisioning policy */
 	private Provisioner provisioner;
 	private Thread provisionerThread;
@@ -42,6 +48,8 @@ public class ResourceManager {
 		this.logger = Logger.getLogger(ResourceManager.class);
 
 		this.vmList = new LinkedList<VMInstance>();
+
+		this.vmAgentThreadList = new LinkedList<VMAgent>();
 	}
 
 	/**
@@ -52,9 +60,9 @@ public class ResourceManager {
 		_instance = new ResourceManager();
 
 		/* initialize provisioning policy */
-		//_instance.provisioner = new StaticProvisioner();
+		_instance.provisioner = new StaticProvisioner();
 		/* start a thread for the provisioner */
-		//_instance.provisionerThread = new Thread(_instance.provisioner); 
+		_instance.provisionerThread = new Thread(_instance.provisioner); 
 
 		String info = "Resource Manager has been initialized.";
 		_instance.logger.info(info);
@@ -72,29 +80,35 @@ public class ResourceManager {
 	 * Finalizes the resource manager.
 	 */
 	public void finalize() {
-		//try {
+		try {
 			/* stop the provisioning thread */
-			String msg = "Stopping provisioner thread.";
+			String msg = "Stopping provisioner thread...";
 			_instance.logger.info(msg);
 
-			//_instance.provisioner.setStop();
-			//_instance.provisionerThread.join();
+			_instance.provisioner.setStop();
+			_instance.provisionerThread.join();
 
-			msg = "Provisioner thread has been stopped.";
+			/* stop all VM Agents */
+			msg = "Stopping all VM Agents...";
 			_instance.logger.info(msg);
+			Iterator<VMAgent> itrAgent = vmAgentThreadList.iterator();
+			while (itrAgent.hasNext()) {
+				VMAgent agent = itrAgent.next();
+				agent.setStop();
+				agent.join();
+			}
 
 			/* release all VMs */
-			/*
+			msg = "Releasing all VM instances...";
+			_instance.logger.info(msg);
 			CloudBroker borker = CloudBroker.createBroker("ONE");
-			Iterator<VMInstance> itr = _instance.vmList.iterator();
-			while (itr.hasNext()) {
-				VMInstance vm = itr.next();
+			Iterator<VMInstance> itrVM = _instance.vmList.iterator();
+			while (itrVM.hasNext()) {
+				VMInstance vm = itrVM.next();
 				borker.finalizeVM(vm);
 			}
-			*/
 
 			_instance.vmList.clear();
-		/*
 		} catch (InterruptedException e) {
 			String msg = String.format(
 					"Provisioner thread interrupted while joining: %s.",
@@ -105,7 +119,47 @@ public class ResourceManager {
 					e.getMessage());
 			_instance.logger.error(msg);
 		}
-		*/
+	}
+
+	/**
+	 * Regular check. It removes all finished VM Agents and updates the status
+	 * of VM instances.
+	 */
+	public void regularCheck() {
+		/* remove all terminated VM Agents */
+		synchronized (vmAgentThreadList) {
+			Iterator<VMAgent> itr = vmAgentThreadList.iterator();
+			while (itr.hasNext()) {
+				VMAgent agent = itr.next();
+				if (agent.getState() == State.TERMINATED) {
+					itr.remove();
+					logger.debug("VM Agent removed.");
+				}
+			}
+		}
+		/* update VM status and remove unusable VMs */
+		synchronized (vmList) {
+			try {
+				CloudBroker broker = CloudBroker.createBroker("ONE");
+				Iterator<VMInstance> itr = vmList.iterator();
+				while (itr.hasNext()) {
+					VMInstance vm = itr.next();
+
+					/* skip those who have jobs on them */
+					if (vm.getJobsAssigned() > 0) continue;
+
+					broker.updateInfo(vm);
+					if (vm.getStatus() != VMStatus.RUNNING) {
+						broker.finalizeVM(vm);
+						itr.remove();
+						logger.debug("VM removed.");
+					}
+				}
+			} catch (BrokerException e) {
+				String msg = String.format("Error during regular check: %s", e.getMessage());
+				logger.error(msg);
+			}
+		}
 	}
 
 	/**
@@ -117,7 +171,19 @@ public class ResourceManager {
 	}
 
 	/**
-	 * Add a VM instance to the resource list.
+	 * The public interface for allocating a VM instance. It starts a VM Agent
+	 * which will allocate and prepare a VM instance until it is ready to go.
+	 */
+	public void allocateVM() {
+		VMAgent vmAgent = new VMAgent();
+		vmAgent.start();
+		synchronized (vmAgentThreadList) {
+			vmAgentThreadList.add(vmAgent);
+		}
+	}
+
+	/**
+	 * Adds a VM instance to the resource list.
 	 * @param vmInstance The VM instance to be added.
 	 */
 	public void addVM(VMInstance vm) {
@@ -127,6 +193,16 @@ public class ResourceManager {
 					"VM#%d has been added to the resource list.",
 					vm.getId());
 			logger.debug(info);
+		}
+	}
+
+	/**
+	 * Removes a VM instance from the resource list.
+	 * @param vmInstance The VM instance to be removed.
+	 */
+	public void removeVM(VMInstance vm) {
+		synchronized (vmList) {
+			vmList.remove(vm);
 		}
 	}
 

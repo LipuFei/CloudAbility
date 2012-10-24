@@ -105,12 +105,16 @@ Changes:
    "ant CloudAbility". The old one was "ant CloudAbility (1)" because of some
    eclipse launch configuration problems. Now this is fixed.
 3. The OpenNebula moudle has been integrated into the project.
-4.
+4. Full automation has been nearly achieved.
+5. A regular check method has been added to the ResourceManager.
+6. Now VM instances are created through VMAgents, independent threads that are
+   responsible for allocating VMs and monitoring them until they are ready to
+   be used.
+7. The shutdown of the system is more graceful then before: it will stop all
+   existing VMAgents and then finalizes all allocated VM instances.
 
 Todos:
 1. Implement profiler for jobs.
-2. Achieve full automation.
-3. Find a better way to wait for VMs to be ready.
+2. Achieve full automation (implement the client side).
 4. For JobMonitors, find a good way to keep track on them, so that the system
    can be shutdown gracefully.
-5. Keep track on VM preparing agents.

@@ -56,12 +56,16 @@ public class Scheduler implements Runnable {
 		logger.debug("Scheduler has started.");
 		try {
 			while (true) {
+				msg = "Waiting...";
+				logger.debug(msg);
+
 				/* check toStop signal */
 				if (this.toStop) break;
 
 				/* check if pending job queue is empty */
-				msg = "Waiting...";
-				logger.debug(msg);
+
+				/* Resource manager's regular check */
+				ResourceManager.instance().regularCheck();
 
 				/* TODO: update job status, such as wait time, priority, etc. */
 

@@ -1,5 +1,5 @@
 /**
- * 
+ * Copyright (C) 2012  Lipu Fei
  */
 package org.cloudability.broker;
 

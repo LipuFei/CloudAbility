@@ -153,7 +153,7 @@ public class Job implements Runnable {
 
 		/* get IP address of the VM instance and the username to login */
 		String vmUsername =
-				DataManager.instance().getConfigMap().get("VM.USERNAME");;
+				DataManager.instance().getConfigMap().get("VM.USERNAME");
 		String vmIp = this.vmInstance.getIpAddress();
 
 		/* get parameters */
@@ -167,33 +167,6 @@ public class Job implements Runnable {
 		String outputRemote = parameterMap.get("OUTPUT.REMOTE");
 
 		try {
-			/* wait for the VM instance to be ready */
-			msg = String.format("Job#%d is waiting for VM#%d to be ready...",
-					id, vmInstance.getId());
-			logger.debug(msg);
-
-			/* TODO: remove this */
-			vmInstance.waitForReady();
-
-			while (true) {
-				msg = String.format("JOB#%d is pinging VM#%d...", id, vmInstance.getId());
-				logger.debug(msg);
-
-				String cmd = String.format("ping -c 1 %s", vmIp);
-				Process p1 = java.lang.Runtime.getRuntime().exec(cmd);
-				int returnVal = p1.waitFor();
-				boolean reachable = (returnVal==0);
-
-				if (reachable)
-					break;
-
-				Thread.sleep(2000);
-			}
-
-			msg = String.format("VM#%d is reachable.", vmInstance.getId());
-			logger.debug(msg);
-			Thread.sleep(5000);
-
 			/* change status to running */
 			msg = String.format("Job#%d started running...", id);
 			logger.debug(msg);
@@ -318,22 +291,8 @@ public class Job implements Runnable {
 			logger.debug(msg);
 			this.status = JobStatus.FINISHED;
 
-		} catch (SSHException e) {
-			msg = String.format("SSH Exception during execution: %s.",
-					e.getMessage());
-			logger.error(msg);
-
-			/* set to failed */
-			this.status = JobStatus.FAILED;
-		} catch (IOException e) {
-			msg = String.format("IO Exception during execution: %s.",
-					e.getMessage());
-			logger.error(msg);
-
-			/* set to failed */
-			this.status = JobStatus.FAILED;
 		} catch (Exception e) {
-			msg = String.format("Other Exception during execution: %s.",
+			msg = String.format("Exception during execution: %s.",
 					e.getMessage());
 			logger.error(msg);
 

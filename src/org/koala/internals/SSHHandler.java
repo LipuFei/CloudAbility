@@ -45,8 +45,8 @@ public class SSHHandler {
 				throws SSHException {
 		String priv_key = this.getKeyFile();
 		if (priv_key == null) {
-			logger.error("DM - Keyfile id_rsa or id_dsa not present in the user ~/.ssh/ directory");
-			throw new RuntimeException();
+			String msg = "Keyfile id_rsa or id_dsa not present in the user ~/.ssh/ directory";
+			throw new RuntimeException(msg);
 		}
 		Connection conn = null;
 		try {
@@ -65,14 +65,13 @@ public class SSHHandler {
 							username, keyfile, keyfilePass);
 
 			if (isAuthenticated == false) {
-				logger.error("Authentication with the ssh public key failed");
-				throw new RuntimeException();
+				String msg = "Authentication with the ssh public key failed";
+				throw new RuntimeException(msg);
 			}
 		} catch(IOException e) {
 			if (conn != null) {
 				conn.close();
 			}
-			logger.error("SSH connection to the remote host has failed");
 			throw new SSHException(e);
 		}
 		return conn;
@@ -85,8 +84,8 @@ public class SSHHandler {
 		try {
 			Connection conn = ssh.getConnection(hostname, username);
 			sess = conn.openSession();
-		} catch(IOException e) {
-			logger.error("Failed to open SSH session with the remote host " + hostname);
+		} catch(Exception e) {
+			//logger.error("Failed to open SSH session with the remote host " + hostname);
 			throw new SSHException(e);
 		}
 		return sess;
@@ -99,8 +98,8 @@ public class SSHHandler {
 		try {
 			Connection conn = ssh.getConnection(hostname, username);
 			sftp = new SFTPv3Client(conn);
-		} catch(IOException e) {
-			logger.error("Failed to open SFTP connection to the remote host " + hostname);
+		} catch(Exception e) {
+			//logger.error("Failed to open SFTP connection to the remote host " + hostname);
 			throw new SSHException(e);
 		}
 		return sftp;
@@ -113,8 +112,8 @@ public class SSHHandler {
 		Connection conn = ssh.getConnection(hostname, username);
 		try {
 			scp = conn.createSCPClient();
-		} catch (IOException e) {
-			logger.error("Failed to open SCP connection to the remote host " + hostname);
+		} catch (Exception e) {
+			//logger.error("Failed to open SCP connection to the remote host " + hostname);
 			throw new SSHException(e);
 		}
 		return scp;

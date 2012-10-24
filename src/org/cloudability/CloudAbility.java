@@ -48,10 +48,46 @@ public class CloudAbility {
 		//testAll();
 		//testJob();
 		//testVM();
-		testJobWithVM();
+		//testJobWithVM();
+		testAuto();
 
 		/* finalize resource manager */
 		ResourceManager.instance().finalize();
+	}
+
+	public static void testAuto() {
+		/* start scheduler */
+		Scheduler scheduler = new Scheduler();
+		Thread schedulerThread = new Thread(scheduler);
+		schedulerThread.start();
+
+		/* start request listener */
+		int port = Integer.parseInt(
+			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
+			);
+		ClientRequestListener listener = new ClientRequestListener(port);
+		Thread listenThread = new Thread(listener);
+		listenThread.start();
+
+		try {
+			while (true) {
+				System.in.read();
+				/* stop listener */
+				listener.stopListening();
+				listenThread.join();
+
+				/* stop scheduler */
+				scheduler.setToStop();
+				schedulerThread.join();
+				break;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public static void testJobWithVM() throws BrokerException, InterruptedException {

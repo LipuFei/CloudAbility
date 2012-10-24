@@ -8,7 +8,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.Scanner;
 import java.util.Vector;
@@ -21,6 +20,9 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
 import org.apache.log4j.Logger;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
@@ -29,8 +31,6 @@ import org.cloudability.resource.VMInstance;
 import org.cloudability.resource.VMInstance.VMStatus;
 import org.cloudability.util.BrokerException;
 import org.cloudability.util.XmlRpcBroker;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 /**
  * Cloud Manipulator for OpenNebula
@@ -200,8 +200,6 @@ public class OneBroker extends CloudBroker {
 		String info = (String)results[1];
 
 		/* parse the information */
-		String msg = "Start parsing VM XML document.";
-		logger.debug(msg);
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -214,15 +212,9 @@ public class OneBroker extends CloudBroker {
 			String ip = expr.evaluate(doc);
 			vm.setIpAddress(ip);
 
-			msg = String.format("IP address of VM#%d is %s", vm.getId(), vm.getIpAddress());
-			logger.debug(msg);
-
 			/* parse state */
 			expr = xpath.compile("/VM/STATE/text()");
 			int state = Integer.parseInt(expr.evaluate(doc));
-
-			msg = String.format("state of VM#%d is %d", vm.getId(), state);
-			logger.debug(msg);
 
 			/* check state */
 			switch (state) {
