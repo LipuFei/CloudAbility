@@ -55,7 +55,7 @@
         <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
         <antcall target="build"/>
     </target>
-    <target name="CloudAbility (1)">
+    <target name="CloudAbility">
         <java classname="org.cloudability.CloudAbility" failonerror="true" fork="yes">
             <classpath refid="CloudAbility.classpath"/>
         </java>

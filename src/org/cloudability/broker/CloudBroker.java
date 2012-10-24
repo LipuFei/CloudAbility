@@ -32,7 +32,7 @@ public abstract class CloudBroker {
 	 */
 	public static CloudBroker createBroker(String name) throws BrokerException {
 		/* DAS-4 OpenNebula Broker */
-		if (name.equals("One")) {
+		if (name.equals("ONE")) {
 			String serverUrl =
 				DataManager.instance().getConfigMap().get("ONE.XMLRPC_URL");
 			String username =
@@ -63,5 +63,7 @@ public abstract class CloudBroker {
 	 * @throws BrokerException
 	 */
 	public abstract void finalizeVM(VMInstance vm) throws BrokerException;
+
+	public abstract void updateInfo(VMInstance vm) throws BrokerException;
 
 }

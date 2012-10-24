@@ -3,11 +3,14 @@
  */
 package org.cloudability.resource;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
+import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.policy.Provisioner;
 import org.cloudability.resource.policy.StaticProvisioner;
+import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
 
 /**
@@ -49,9 +52,9 @@ public class ResourceManager {
 		_instance = new ResourceManager();
 
 		/* initialize provisioning policy */
-		_instance.provisioner = new StaticProvisioner();
+		//_instance.provisioner = new StaticProvisioner();
 		/* start a thread for the provisioner */
-		_instance.provisionerThread = new Thread(_instance.provisioner); 
+		//_instance.provisionerThread = new Thread(_instance.provisioner); 
 
 		String info = "Resource Manager has been initialized.";
 		_instance.logger.info(info);
@@ -69,25 +72,40 @@ public class ResourceManager {
 	 * Finalizes the resource manager.
 	 */
 	public void finalize() {
-		try {
+		//try {
 			/* stop the provisioning thread */
-			String info = "Stopping provisioner thread.";
-			_instance.logger.info(info);
+			String msg = "Stopping provisioner thread.";
+			_instance.logger.info(msg);
 
-			_instance.provisioner.setStop();
-			_instance.provisionerThread.join();
+			//_instance.provisioner.setStop();
+			//_instance.provisionerThread.join();
 
-			info = "Provisioner thread has been stopped.";
-			_instance.logger.info(info);
+			msg = "Provisioner thread has been stopped.";
+			_instance.logger.info(msg);
 
 			/* release all VMs */
-			
+			/*
+			CloudBroker borker = CloudBroker.createBroker("ONE");
+			Iterator<VMInstance> itr = _instance.vmList.iterator();
+			while (itr.hasNext()) {
+				VMInstance vm = itr.next();
+				borker.finalizeVM(vm);
+			}
+			*/
 
+			_instance.vmList.clear();
+		/*
 		} catch (InterruptedException e) {
-			String info =
-					"Provisioner thread has been interrupted while joining.";
-			_instance.logger.error(info);
+			String msg = String.format(
+					"Provisioner thread interrupted while joining: %s.",
+					e.getMessage());
+			_instance.logger.error(msg);
+		} catch (BrokerException e) {
+			String msg = String.format("Unable to release VM instances: %s.",
+					e.getMessage());
+			_instance.logger.error(msg);
 		}
+		*/
 	}
 
 	/**

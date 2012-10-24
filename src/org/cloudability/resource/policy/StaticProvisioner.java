@@ -8,8 +8,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.cloudability.DataManager;
+import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
+import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
 
 /**
@@ -53,10 +55,22 @@ public class StaticProvisioner extends Provisioner {
 	 * Allocate a fixed number of VM instances.
 	 */
 	@Override
-	protected void initialize() {
+	protected void initialize() throws RuntimeException {
+		/*
 		for (int i = 0; i < allocationNumber; i++) {
 			VMInstance vm = new VMInstance(i + 1);
 			ResourceManager.instance().addVM(vm);
+		}
+		*/
+		try {
+			CloudBroker borker = CloudBroker.createBroker("ONE");
+	
+			for (int i = 0; i < allocationNumber; i++) {
+				VMInstance vm = borker.allocateVM();
+				ResourceManager.instance().addVM(vm);
+			}
+		} catch (BrokerException e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 

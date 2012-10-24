@@ -4,18 +4,33 @@
 
 package org.cloudability.broker;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.Scanner;
 import java.util.Vector;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import org.apache.log4j.Logger;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 
 import org.cloudability.resource.VMInstance;
+import org.cloudability.resource.VMInstance.VMStatus;
 import org.cloudability.util.BrokerException;
 import org.cloudability.util.XmlRpcBroker;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * Cloud Manipulator for OpenNebula
@@ -24,6 +39,8 @@ import org.cloudability.util.XmlRpcBroker;
  *
  */
 public class OneBroker extends CloudBroker {
+
+	private Logger logger;
 
 	private String vmTemplatePath;
 
@@ -43,6 +60,7 @@ public class OneBroker extends CloudBroker {
 	public OneBroker(String serverUrl, String username, String password,
 				String vmTemplatePath) throws BrokerException {
 		super();
+		logger = Logger.getLogger(OneBroker.class);
 		broker = new XmlRpcBroker(serverUrl, username, password);
 		client = broker.getClient();
 		this.vmTemplatePath = vmTemplatePath;
@@ -72,7 +90,6 @@ public class OneBroker extends CloudBroker {
 		}
 
 		/* check the result */
-		/* check results */
 		if (result != null) {
 			Object[] res = (Object[])result;
 			Boolean success = (Boolean)res[0];
@@ -83,16 +100,18 @@ public class OneBroker extends CloudBroker {
 				Integer errorCode = (Integer)res[2];
 
 				/* log and throw exception */
-				String error = String.format(
+				String msg = String.format(
 						"Error resoponse: ErrorCode=%d, Info=%s",
 						errorCode, info);
-				throw new BrokerException(error);
+				logger.error(msg);
+				throw new BrokerException(msg);
 			}
 		}
 		else {
 			/* log and throw exception */
-			String error = "No response received from XMP-RPC server.";
-			throw new BrokerException(error);
+			String msg = "No response received from XMP-RPC server.";
+			logger.error(msg);
+			throw new BrokerException(msg);
 		}
 
 		return (Object[])result;
@@ -100,9 +119,17 @@ public class OneBroker extends CloudBroker {
 
 	@Override
 	public VMInstance allocateVM() throws BrokerException {
+		/* allocate the VM instance */
 		int vmId = oneAllocateVM(vmTemplatePath);
 		VMInstance vm = new VMInstance(vmId);
+		/* update information */
+		updateInfo(vm);
 		return vm;
+	}
+
+	@Override
+	public void updateInfo(VMInstance vm) throws BrokerException {
+		oneInfoVM(vm);
 	}
 
 	@Override
@@ -124,8 +151,9 @@ public class OneBroker extends CloudBroker {
 			scanner = new Scanner(new File(templatePath));
 		} catch (FileNotFoundException e) {
 			/* log and throw exception. */
-			String error = "VM template file not found: " + templatePath + ".";
-			throw new BrokerException(error);
+			String msg = "VM template file not found: " + templatePath + ".";
+			logger.error(msg);
+			throw new BrokerException(msg);
 		}
 		String template = scanner.useDelimiter("\\Z").next();
 
@@ -155,4 +183,70 @@ public class OneBroker extends CloudBroker {
 		/* execute the command */
 		this.execute("one.vm.action", params);
 	}
+
+	/**
+	 * Retrieving information about a VM instance, corresponding to the
+	 * OpenNebula EC2 API one.vm.info.
+	 * @param vmId ID of the VM to be retrieved.
+	 */
+	private void oneInfoVM(VMInstance vm) throws BrokerException {
+		/* prepare parameters */
+		Vector<Object> params = new Vector<Object>();
+		params.add(this.oneUserSession);
+		params.add(vm.getId());
+
+		/* execute the command */
+		Object[] results = this.execute("one.vm.info", params);
+		String info = (String)results[1];
+
+		/* parse the information */
+		String msg = "Start parsing VM XML document.";
+		logger.debug(msg);
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.parse(new ByteArrayInputStream(info.getBytes()));
+			XPathFactory xPathfactory = XPathFactory.newInstance();
+			XPath xpath = xPathfactory.newXPath();
+
+			/* parse IP address */
+			XPathExpression expr = xpath.compile("/VM/TEMPLATE/CONTEXT/IP_PUBLIC/text()");
+			String ip = expr.evaluate(doc);
+			vm.setIpAddress(ip);
+
+			msg = String.format("IP address of VM#%d is %s", vm.getId(), vm.getIpAddress());
+			logger.debug(msg);
+
+			/* parse state */
+			expr = xpath.compile("/VM/STATE/text()");
+			int state = Integer.parseInt(expr.evaluate(doc));
+
+			msg = String.format("state of VM#%d is %d", vm.getId(), state);
+			logger.debug(msg);
+
+			/* check state */
+			switch (state) {
+			case 1: vm.setStatus(VMStatus.PENDING); break;
+			case 2: vm.setStatus(VMStatus.BOOTING); break;
+			case 3: vm.setStatus(VMStatus.RUNNING); break;
+			default:
+				vm.setStatus(VMStatus.UNKNOWN); break;
+			}
+
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
 }

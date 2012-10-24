@@ -96,3 +96,21 @@ Todos:
    and you don't always have them in you known_hosts.
 4. Find a good way to monitor the VM instances.
 
+
+2012-10-24  Lipu Fei
+==================================================
+Changes:
+1. The full execution procedure of the job has been implemented and tested.
+2. Now the command of executing the program using ANT file build.xml is
+   "ant CloudAbility". The old one was "ant CloudAbility (1)" because of some
+   eclipse launch configuration problems. Now this is fixed.
+3. The OpenNebula moudle has been integrated into the project.
+4.
+
+Todos:
+1. Implement profiler for jobs.
+2. Achieve full automation.
+3. Find a better way to wait for VMs to be ready.
+4. For JobMonitors, find a good way to keep track on them, so that the system
+   can be shutdown gracefully.
+5. Keep track on VM preparing agents.

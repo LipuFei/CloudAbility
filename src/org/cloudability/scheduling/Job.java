@@ -12,15 +12,13 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
+import org.cloudability.resource.VMException;
 import org.cloudability.resource.VMInstance;
 import org.koala.internals.SSHException;
 import org.koala.internals.SSHHandler;
 
 import com.trilead.ssh2.ChannelCondition;
-import com.trilead.ssh2.Connection;
 import com.trilead.ssh2.SCPClient;
-import com.trilead.ssh2.SFTPv3Client;
-import com.trilead.ssh2.SFTPv3FileHandle;
 import com.trilead.ssh2.Session;
 import com.trilead.ssh2.StreamGobbler;
 
@@ -32,9 +30,6 @@ import com.trilead.ssh2.StreamGobbler;
  *
  */
 public class Job implements Runnable {
-
-	/* default buffer size is 8MB */
-	private final static int defaultBufferSize = 8 * 1024 * 1024;
 
 	/* auto generating job ID */
 	private static int maxJobId = 0;
@@ -156,11 +151,6 @@ public class Job implements Runnable {
 		Logger logger = Logger.getLogger(Job.class);
 		String msg = "";
 
-		/* change status to running */
-		msg = String.format("Job#%d started running.", id);
-		logger.debug(msg);
-		this.status = JobStatus.RUNNING;
-
 		/* get IP address of the VM instance and the username to login */
 		String vmUsername =
 				DataManager.instance().getConfigMap().get("VM.USERNAME");;
@@ -176,19 +166,49 @@ public class Job implements Runnable {
 		String outputLocal = parameterMap.get("OUTPUT.LOCAL");
 		String outputRemote = parameterMap.get("OUTPUT.REMOTE");
 
-		try {	
+		try {
+			/* wait for the VM instance to be ready */
+			msg = String.format("Job#%d is waiting for VM#%d to be ready...",
+					id, vmInstance.getId());
+			logger.debug(msg);
+
+			/* TODO: remove this */
+			vmInstance.waitForReady();
+
+			while (true) {
+				msg = String.format("JOB#%d is pinging VM#%d...", id, vmInstance.getId());
+				logger.debug(msg);
+
+				String cmd = String.format("ping -c 1 %s", vmIp);
+				Process p1 = java.lang.Runtime.getRuntime().exec(cmd);
+				int returnVal = p1.waitFor();
+				boolean reachable = (returnVal==0);
+
+				if (reachable)
+					break;
+
+				Thread.sleep(2000);
+			}
+
+			msg = String.format("VM#%d is reachable.", vmInstance.getId());
+			logger.debug(msg);
+			Thread.sleep(5000);
+
+			/* change status to running */
+			msg = String.format("Job#%d started running...", id);
+			logger.debug(msg);
+			this.status = JobStatus.RUNNING;
+
 			/*
 			 * STEP #1. upload execution and input files
 			 */
-			msg = String.format("Job#%d started uploading files.", id);
+			msg = String.format("Job#%d started uploading files...", id);
 			logger.debug(msg);
 
 			SCPClient scpClient = SSHHandler.getScpClient(vmIp, vmUsername);
 			String inputSrcFiles[] = inputLocal.split(",");
 			String inputDesFiles[] = inputRemote.split(",");
 
-			msg = String.format("Job#%d started uploading files.", id);
-			logger.debug(msg);
 			String[] tmp = appLocal.split("/");
 			String tarballName = tmp[tmp.length - 1];
 			scpClient.put(appLocal, tarballName, RemoteDir, "0644");

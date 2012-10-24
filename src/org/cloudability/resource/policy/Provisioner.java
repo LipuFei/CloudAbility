@@ -50,7 +50,7 @@ public abstract class Provisioner implements Runnable {
 	/**
 	 * Initialization.
 	 */
-	protected abstract void initialize();
+	protected abstract void initialize() throws RuntimeException;
 
 	/**
 	 * A public interface for selecting a VM instance.
