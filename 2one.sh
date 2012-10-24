@@ -1,0 +1,1 @@
+res/sh/2one.sh
