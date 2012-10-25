@@ -66,9 +66,10 @@ public class VMInstance {
 	}
 
 	/**
-	 * Assigns a job to this VM instance.
+	 * Occupies this VM instance. It increase the number of jobs assigned to
+	 * this VM instance.
 	 */
-	public void assign() {
+	public void occupy() {
 		this.jobsAssigned.incrementAndGet();
 	}
 

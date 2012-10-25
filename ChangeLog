@@ -148,7 +148,23 @@ Tests:
 2. Shutting down the system while having Jobs in execution has been tested
    for several times. The system can gracefully shutdown the Jobs, JobMonitors,
    VMAgents, and VMInstances created by the system before it is terminated.
+3. The profiler for jobs has been implemented. The performance statistics is
+   gathered in the JobMonitor after a Job has been finished. The current metrics
+   includes: makespan, running-time, preparation-time, upload-time,
+   tarball-extraction-time, execution-time, and download-time.
+   More suitable metrics may be further discussed.
 
 Todos:
-1. Implement profiler for jobs.
-2. 
+1. Improve profiler for jobs.
+2. Implement a central statistics database for storing system performance and
+   job performance.
+3. Improve the system, such as synchronization, etc.
+
+Notes:
+1. Sometime the allocation of a VM instance may fail. Then, for a provisioning
+   policy like static, it may not have the specified number of VM instances.
+   One solution for this is that, we can commence a regular check that makes
+   sure the #VMAgents + #VMInstances = #DesiredVMInstances. So if some VMAgents
+   fail to allocate a usable VMInstance, this regular check will notice this
+   and create another VMAgent to allocate one, so that the total number of
+   VMInstances should be the desired number.

@@ -40,6 +40,7 @@ public class ResourceManager {
 	private Provisioner provisioner;
 	private Thread provisionerThread;
 
+
 	/**
 	 * Constructor.
 	 * @throws CloudConfigException
@@ -51,6 +52,7 @@ public class ResourceManager {
 
 		this.vmAgentList = new LinkedList<VMAgent>();
 	}
+
 
 	/**
 	 * Initialization.
@@ -68,6 +70,7 @@ public class ResourceManager {
 		_instance.logger.info(info);
 	}
 
+
 	/**
 	 * Gets the instance.
 	 * @return the ResourceManager instance.
@@ -75,6 +78,7 @@ public class ResourceManager {
 	public static ResourceManager instance() {
 		return _instance;
 	}
+
 
 	/**
 	 * Finalizes the resource manager.
@@ -120,6 +124,7 @@ public class ResourceManager {
 			_instance.logger.error(msg);
 		}
 	}
+
 
 	/**
 	 * Regular check. It removes all finished VM Agents and updates the status
@@ -176,6 +181,7 @@ public class ResourceManager {
 		}
 	}
 
+
 	/**
 	 * Gets the number of VMAgents running.
 	 * @return The number of VMAgents running.
@@ -195,6 +201,7 @@ public class ResourceManager {
 		return this.vmList;
 	}
 
+
 	/**
 	 * The public interface for allocating a VM instance. It starts a VM Agent
 	 * which will allocate and prepare a VM instance until it is ready to go.
@@ -206,6 +213,7 @@ public class ResourceManager {
 			vmAgentList.add(vmAgent);
 		}
 	}
+
 
 	/**
 	 * Adds a VM instance to the resource list.
@@ -222,6 +230,7 @@ public class ResourceManager {
 		}
 	}
 
+
 	/**
 	 * Removes a VM instance from the resource list.
 	 * @param vmInstance The VM instance to be removed.
@@ -231,6 +240,7 @@ public class ResourceManager {
 			vmList.remove(vm);
 		}
 	}
+
 
 	/**
 	 * Asks the resource manager to retrieve an available VM instance according

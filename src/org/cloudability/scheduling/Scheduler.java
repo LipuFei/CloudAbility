@@ -16,6 +16,7 @@ import org.cloudability.scheduling.policy.Allocator;
 import org.cloudability.scheduling.policy.FCFSAllocator;
 
 /**
+ * The scheduler.
  * @author Lipu Fei
  * @version 0.1
  *

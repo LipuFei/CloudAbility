@@ -5,6 +5,7 @@ package org.cloudability.scheduling;
 
 import org.apache.log4j.Logger;
 
+import org.cloudability.analysis.JobProfiler;
 import org.cloudability.scheduling.Job.JobStatus;
 
 /**
@@ -89,6 +90,20 @@ public class JobMonitor extends Thread {
 
 		/* check job status */
 		if (job.getStatus() == JobStatus.FINISHED) {
+			/* store the statistics of the job's performance */
+			JobProfiler profiler = job.getProfiler();
+			long makeSpan = profiler.getMark("finishTime") - profiler.getMark("arrivalTime");
+			long runningTime = profiler.getMark("finishTime") - profiler.getMark("startTime");
+			long preparationTime = profiler.getPeriod("preparationTime");
+			long uploadTime = profiler.getPeriod("uploadTime");
+			long tarballExtractionTime = profiler.getPeriod("tarballExtractionTime");
+			long executionTime = profiler.getPeriod("executionTime");
+			long downloadTime = profiler.getPeriod("downloadTime");
+			msg = String.format(
+					"JOB#%d: makespan=%d; runningTime=%d; preparationTime=%d; uploadTime=%d; tarballExtractionTime=%d; executionTime=%d; downloadTime=%d.",
+					job.getId(), makeSpan, runningTime, preparationTime, uploadTime, tarballExtractionTime, executionTime, downloadTime);
+			logger.info(msg);
+
 			/* log the success */
 
 			/* TODO: put it into the finished job queue */

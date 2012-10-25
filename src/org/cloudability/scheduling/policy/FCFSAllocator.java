@@ -3,8 +3,6 @@
  */
 package org.cloudability.scheduling.policy;
 
-import org.cloudability.resource.ResourceManager;
-import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.Job;
 
 /**

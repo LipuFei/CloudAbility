@@ -8,11 +8,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.cloudability.DataManager;
-import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.ResourceManager;
-import org.cloudability.resource.VMAgent;
 import org.cloudability.resource.VMInstance;
-import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
 
 /**
@@ -96,7 +93,7 @@ public class StaticProvisioner extends Provisioner {
 						 * the VM that has been selected before the provisioner
 						 * thread can have access to it.
 						 */
-						vm.assign();
+						vm.occupy();
 						break;
 					}
 				}

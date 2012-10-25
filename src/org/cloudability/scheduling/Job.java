@@ -11,6 +11,7 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
+import org.cloudability.analysis.JobProfiler;
 import org.cloudability.resource.VMInstance;
 import org.koala.internals.SSHHandler;
 
@@ -32,6 +33,9 @@ public class Job implements Runnable {
 	private static int maxJobId = 0;
 
 	private Logger logger = Logger.getLogger(Job.class);
+
+	/* every job has a profiler */
+	private JobProfiler jobProfiler = new JobProfiler();
 
 	/* a signal that indicates if this job should stop */
 	private volatile boolean toStop;
@@ -60,27 +64,11 @@ public class Job implements Runnable {
 	/**
 	 * Constructor.
 	 * @param id ID of this job.
-	 */
-	public Job(int id) {
-		this.arrivalTime = System.currentTimeMillis();
-
-		this.toStop = false;
-		this.isStopped = false;
-
-		this.status = JobStatus.PENDING;
-
-		this.id = id;
-		this.vmInstance = null;
-		this.parameterMap = new HashMap<String, String>();
-	}
-
-	/**
-	 * Constructor.
-	 * @param id ID of this job.
 	 * @param parameterMap The parameter map.
 	 */
 	public Job(int id, HashMap<String, String> parameterMap) {
 		this.arrivalTime = System.currentTimeMillis();
+		this.jobProfiler.mark("arrivalTime");
 
 		this.toStop = false;
 		this.status = JobStatus.PENDING;
@@ -107,6 +95,10 @@ public class Job implements Runnable {
 		if (this.id != job.id) return false;
 
 		return true;
+	}
+
+	public JobProfiler getProfiler() {
+		return this.jobProfiler;
 	}
 
 	/**
@@ -150,7 +142,12 @@ public class Job implements Runnable {
 	 */
 	@Override
 	public void run() {
+		jobProfiler.mark("startTime");
+
 		String msg = "";
+
+		/* preparations */
+		jobProfiler.mark("preparationTime");
 
 		/* get IP address of the VM instance and the username to login */
 		msg = "Getting VM parameters...";
@@ -171,6 +168,8 @@ public class Job implements Runnable {
 		String outputLocal = parameterMap.get("OUTPUT.LOCAL");
 		String outputRemote = parameterMap.get("OUTPUT.REMOTE");
 
+		jobProfiler.mark("preparationTime");
+
 		try {
 			/* change status to running */
 			msg = String.format("Job#%d has been started...", id);
@@ -180,6 +179,8 @@ public class Job implements Runnable {
 			/*
 			 * STEP #1. upload execution and input files
 			 */
+			jobProfiler.mark("uploadTime");
+
 			msg = String.format("Job#%d started uploading files...", id);
 			logger.debug(msg);
 
@@ -192,9 +193,12 @@ public class Job implements Runnable {
 			scpClient.put(appLocal, tarballName, RemoteDir, "0644");
 			scpClient.put(inputSrcFiles, inputDesFiles, RemoteDir, "0644");
 
+			jobProfiler.mark("uploadTime");
+
 			/*
 			 * STEP #2. execute the job
 			 */
+			jobProfiler.mark("tarballExtractionTime");
 			/* first uncompress the execution tarball */
 			msg = String.format("JOB#%d started extracting the tarball...", id);
 			logger.debug(msg);
@@ -252,7 +256,11 @@ public class Job implements Runnable {
 				throw new RuntimeException(msg);
 			}
 
+			jobProfiler.mark("tarballExtractionTime");
+
 			/* execute the job */
+			jobProfiler.mark("executionTime");
+
 			msg = String.format("JOB#%d started execution...", id);
 			logger.debug(msg);
 
@@ -310,12 +318,18 @@ public class Job implements Runnable {
 				throw new RuntimeException(msg);
 			}
 
+			jobProfiler.mark("executionTime");
+
 			/* STEP #3. download output files */
+			jobProfiler.mark("downloadTime");
+
 			msg = String.format("JOB#%d started downloading the output file...", id);
 			logger.debug(msg);
 			logger.debug(RemoteDir + "/" + outputRemote);
 			logger.debug(outputLocal);
 			scpClient.get(RemoteDir + "/" + outputRemote, outputLocal);
+
+			jobProfiler.mark("downloadTime");
 
 			/* finish */
 			msg = String.format("Job#%d is finished.", id);
@@ -335,6 +349,8 @@ public class Job implements Runnable {
 				this.status = JobStatus.FAILED;
 			}
 		}
+
+		jobProfiler.mark("finishTime");
 
 		/* notify all */
 		synchronized (this) {
