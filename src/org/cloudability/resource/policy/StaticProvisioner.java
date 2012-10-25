@@ -108,4 +108,17 @@ public class StaticProvisioner extends Provisioner {
 	protected void postprocess() {
 	}
 
+	/**
+	 * Check if total number of VMs
+	 */
+	@Override
+	public void check() {
+		int currentNumber = ResourceManager.instance().getVMAgentNumber() +
+				ResourceManager.instance().getVMInstanceNumber();
+		int toAllocate = allocationNumber - currentNumber;
+		while (toAllocate-- > 0) {
+			ResourceManager.instance().allocateVM();
+		}
+	}
+
 }

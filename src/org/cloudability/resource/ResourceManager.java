@@ -171,6 +171,9 @@ public class ResourceManager {
 				logger.error(msg);
 			}
 		}
+
+		/* do the provisioner check */
+		this.provisioner.check();
 	}
 
 
