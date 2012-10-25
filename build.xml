@@ -60,4 +60,10 @@
             <classpath refid="CloudAbility.classpath"/>
         </java>
     </target>
+
+    <target name="CloudClient">
+        <java classname="org.cloudclient.CloudClient" failonerror="true" fork="yes">
+            <classpath refid="CloudAbility.classpath"/>
+        </java>
+    </target>
 </project>
