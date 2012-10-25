@@ -65,6 +65,8 @@ public abstract class Provisioner implements Runnable {
 		return this.selectedVM;
 	}
 
+	public abstract void check();
+
 	/**
 	 * This method is invoked before provisioning.
 	 */
