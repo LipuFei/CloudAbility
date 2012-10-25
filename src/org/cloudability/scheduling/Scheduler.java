@@ -3,6 +3,8 @@
  */
 package org.cloudability.scheduling;
 
+import java.lang.Thread.State;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
@@ -52,18 +54,18 @@ public class Scheduler implements Runnable {
 	public void run() {
 		JobQueue pendingQueue = DataManager.instance().getPendingJobQueue();
 
-		String msg = "";
-		logger.debug("Scheduler has started.");
+		String msg = "Scheduler has started.";
+		logger.debug(msg);
 		try {
 			while (true) {
-				msg = "Waiting...";
-				logger.debug(msg);
+				/* show the system status */
+				showStatus();
 
 				/* check toStop signal */
 				if (this.toStop) break;
 
-				/* check if pending job queue is empty */
-
+				/* Scheduler's regular check */
+				regularCheck();
 				/* Resource manager's regular check */
 				ResourceManager.instance().regularCheck();
 
@@ -81,38 +83,130 @@ public class Scheduler implements Runnable {
 					}
 					continue;
 				}
+				msg = String.format("VM#%d has been selected.", vm.getId());
+				logger.debug(msg);
 
-				/* check pick pending job */
-				if (pendingQueue.isEmpty()) {
+				/* select a job and assign a VM instance to it */
+				Job job = this.allocator.select();
+				if (job == null) {
+					/*
+					 * The selected VM has invoked assign(), so if there is
+					 * no job available, we need to free it.
+					 */
+					synchronized (vm) {
+						msg = String.format("No jobs available, freeing VM#%d.", vm.getId());
+						logger.debug(msg);
+						vm.free();
+					}
 					synchronized (pendingQueue) {
 						pendingQueue.wait(defaultWaitInterval);
 					}
 					continue;
 				}
-
-				/* select a job and assign a VM instance to it */
-				Job job = this.allocator.select();
-				vm.assign();	/* a MUST */
-				job.setVMInstance(vm);
-
-				/* execute */
-				msg = String.format(
-						"Starting job monitor for JOB#%d on VM#%d.",
-						job.getId(), job.getVMInstance().getId());
+				msg = String.format("JOB#%d has been selected.", job.getId());
 				logger.debug(msg);
-				JobMonitor jobMonitor = new JobMonitor(job);
-				Thread monitorThread = new Thread(jobMonitor);
-				monitorThread.start();
+
+				/* assign VM instance and execute the job */
+				job.setVMInstance(vm);
+				createJobMonitor(job);
 			}
 
-			logger.debug("Scheduler is stopping.");
+			/* finalize */
+			logger.info("Scheduler is finalizing.");
+			finialize();
 
-			/* TODO: finalize */
-
-			logger.debug("Scheduler is done.");
+			logger.info("Scheduler is done.");
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			msg = String.format("Interrupted while waiting: %s.", e.getMessage());
+			logger.error(msg);
 		}
+	}
+
+
+	/**
+	 * Finalization. This method is called when scheduler is required to be
+	 * stooped. It waits for all JobMonitors to stop the Jobs they are
+	 * monitoring. 
+	 */
+	private void finialize() {
+		LinkedList<JobMonitor> monitorList = DataManager.instance().getJobMonitorList();
+		synchronized (monitorList) {
+			Iterator<JobMonitor> itr = monitorList.iterator();
+			while (itr.hasNext()) {
+				JobMonitor monitor = itr.next();
+				monitor.setToStop();
+				try {
+					monitor.join();
+				} catch (InterruptedException e) {
+					String msg = String.format("Interrupted while waiting for JobMonitor to stop: %s.", e.getMessage());
+					logger.error(msg);
+				}
+			}
+		}
+	}
+
+
+	/**
+	 * Regular check. It removes all finished JobMonitors.
+	 */
+	private void regularCheck() {
+		/* remove all finished JobMonitors */
+		LinkedList<JobMonitor> monitorList = DataManager.instance().getJobMonitorList();
+		synchronized (monitorList) {
+			Iterator<JobMonitor> itr = monitorList.iterator();
+			while (itr.hasNext()) {
+				JobMonitor monitor = itr.next();
+				if (monitor.getState() == State.TERMINATED) {
+					itr.remove();
+					String msg = "Finished JobMonitor removed.";
+					logger.debug(msg);
+				}
+			}
+		}
+	}
+
+
+	/**
+	 * A Method to create a JobMonitor for a Job in order to execute and
+	 * monitor it.
+	 * @param job The job to be executed and monitored.
+	 */
+	private void createJobMonitor(Job job) {
+		String msg = String.format(
+				"Starting job monitor for JOB#%d on VM#%d.",
+				job.getId(), job.getVMInstance().getId());
+		logger.debug(msg);
+
+		/* create a job monitor thread */
+		JobMonitor jobMonitor = new JobMonitor(job);
+		jobMonitor.start();
+
+		/* add into list */
+		DataManager.instance().addJobMonitor(jobMonitor);
+	}
+
+
+	/**
+	 * Shows the status of the system, including how many JobMonitors are
+	 * running, how many VMInstances do we have, etc.
+	 */
+	private void showStatus() {
+		String msg = String.format(
+				"Jobs in pending queue: %d.",
+				DataManager.instance().getPendingJobQueue().size());
+		logger.info(msg);
+		msg = String.format(
+				"JobMonitors running: %d.",
+				DataManager.instance().getJobMonitorNumber());
+		logger.info(msg);
+		msg = String.format(
+				"VMInstances in resource pool: %d.",
+				ResourceManager.instance().getVMInstanceNumber());
+		logger.info(msg);
+		msg = String.format(
+				"VMAgents running: %d.",
+				ResourceManager.instance().getVMAgentNumber());
+		logger.info(msg);
 	}
 
 }

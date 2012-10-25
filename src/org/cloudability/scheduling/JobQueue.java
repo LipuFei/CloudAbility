@@ -40,6 +40,12 @@ public class JobQueue {
 		return empty;
 	}
 
+	public int size() {
+		synchronized (queue) {
+			return queue.size();
+		}
+	}
+
 	/**
 	 * Adds a job to the end of the queue.
 	 * @param job The job to be added.

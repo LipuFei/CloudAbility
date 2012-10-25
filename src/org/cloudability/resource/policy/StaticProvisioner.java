@@ -89,6 +89,14 @@ public class StaticProvisioner extends Provisioner {
 				synchronized (vm) {
 					if (vm.getJobsAssigned() == 0) {
 						this.selectedVM = vm;
+						/* IMPORTANT: assign the VM here is because, the
+						 * provisioner thread regularly may release some VM if
+						 * they have been idle for a certain amount of time.
+						 * So if must use an atomic-like operation to assign
+						 * the VM that has been selected before the provisioner
+						 * thread can have access to it.
+						 */
+						vm.assign();
 						break;
 					}
 				}

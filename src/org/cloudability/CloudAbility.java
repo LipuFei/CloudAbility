@@ -1,5 +1,5 @@
 /**
- * 
+ * Copyright (C) 2012  Lipu Fei
  */
 package org.cloudability;
 
@@ -30,8 +30,8 @@ public class CloudAbility {
 
 	/**
 	 * @param args
-	 * @throws BrokerException 
-	 * @throws InterruptedException 
+	 * @throws BrokerException
+	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws BrokerException, InterruptedException {
 		BasicConfigurator.configure();

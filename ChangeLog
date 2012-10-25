@@ -118,3 +118,37 @@ Todos:
 2. Achieve full automation (implement the client side).
 4. For JobMonitors, find a good way to keep track on them, so that the system
    can be shutdown gracefully.
+
+
+2012-10-25  Lipu Fei
+==================================================
+Fixes:
+1. A critical bug in the static provisioning policy has been fixed. The bug was
+   located in the method allocate(), which would pick a VMInstance for the
+   selected Job. This is no correct since in the scheduler, an available
+   VMInstance has already been picked.
+
+Changes:
+1. JobMonitors are now being tracked, and when scheduler is reqiured to be
+   stopped, it will raise a stop signal to the running JobMonitors, and they
+   will stop the Jobs that are monitoring.
+2. The allocate() method in the provisioner now should occupy a VMInstance
+   immediately after it is selected, because there is a provisioner thread that
+   would act according to the current situation (i.e. remove idle VMInstances).
+   The scheduler picks a VMInstance first, so if this picked VMInstance is
+   released when the scheduler is still choosing a Job, then an error would
+   occur.
+3. A regular check method has been implemented for the scheduler, which removes
+   all finished JobMonitors.
+4. System status is regularly updated in the scheduler.
+
+Tests:
+1. Several tests have been carried out for several times, including 5 jobs with
+   3 VMs, 5 jobs with 5 VMs.
+2. Shutting down the system while having Jobs in execution has been tested
+   for several times. The system can gracefully shutdown the Jobs, JobMonitors,
+   VMAgents, and VMInstances created by the system before it is terminated.
+
+Todos:
+1. Implement profiler for jobs.
+2. 

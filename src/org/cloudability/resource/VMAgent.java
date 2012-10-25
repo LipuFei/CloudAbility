@@ -29,7 +29,7 @@ public class VMAgent extends Thread {
 	/* default wait period is 300 milliseconds */
 	private final static long defaultWaitPeriod = 300;
 
-	private Logger logger;
+	private Logger logger = Logger.getLogger(VMAgent.class);
 
 	private volatile boolean toStop;
 
@@ -40,13 +40,12 @@ public class VMAgent extends Thread {
 	public VMAgent() {
 		super();
 		this.toStop = false;
-		this.logger = Logger.getLogger(VMAgent.class);
 	}
 
 	/**
 	 * Sets the stop signal in order to stop it gracefully.
 	 */
-	public void setStop() {
+	public void setToStop() {
 		this.toStop = true;
 	}
 
@@ -158,6 +157,8 @@ public class VMAgent extends Thread {
 					/* remove this VM instance */
 					CloudBroker broker = CloudBroker.createBroker("ONE");
 					broker.finalizeVM(vm);
+					msg = String.format("VM#%d has been finalized.", vm.getId());
+					logger.info(msg);
 				}
 				else {
 					msg = String.format("VM#UNKNOWN preparation failed: %s", e.getMessage());

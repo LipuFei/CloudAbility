@@ -39,17 +39,8 @@ public class FCFSAllocator extends Allocator {
 		/* sort the queue */
 		pendingQueue.sort(new FCFSJobComparator());
 
-		/* try to get a VM instance */
-		VMInstance vm = ResourceManager.instance().getAvailableVM();
-		if (vm == null) {
-			/* select nothing */
-			this.selectedJob = null;
-			return;
-		}
-
 		/* remove and get the first job, and assign VM instance to it */
 		Job job = pendingQueue.popJob();
-		job.setVMInstance(vm);
 
 		this.selectedJob = job;
 	}

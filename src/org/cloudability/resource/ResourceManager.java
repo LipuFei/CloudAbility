@@ -34,7 +34,7 @@ public class ResourceManager {
 	private LinkedList<VMInstance> vmList;
 
 	/* some nasty stuff */
-	private LinkedList<VMAgent> vmAgentThreadList;
+	private LinkedList<VMAgent> vmAgentList;
 
 	/* provisioning policy */
 	private Provisioner provisioner;
@@ -49,7 +49,7 @@ public class ResourceManager {
 
 		this.vmList = new LinkedList<VMInstance>();
 
-		this.vmAgentThreadList = new LinkedList<VMAgent>();
+		this.vmAgentList = new LinkedList<VMAgent>();
 	}
 
 	/**
@@ -91,10 +91,10 @@ public class ResourceManager {
 			/* stop all VM Agents */
 			msg = "Stopping all VM Agents...";
 			_instance.logger.info(msg);
-			Iterator<VMAgent> itrAgent = vmAgentThreadList.iterator();
+			Iterator<VMAgent> itrAgent = vmAgentList.iterator();
 			while (itrAgent.hasNext()) {
 				VMAgent agent = itrAgent.next();
-				agent.setStop();
+				agent.setToStop();
 				agent.join();
 			}
 
@@ -127,16 +127,17 @@ public class ResourceManager {
 	 */
 	public void regularCheck() {
 		/* remove all terminated VM Agents */
-		synchronized (vmAgentThreadList) {
-			Iterator<VMAgent> itr = vmAgentThreadList.iterator();
+		synchronized (vmAgentList) {
+			Iterator<VMAgent> itr = vmAgentList.iterator();
 			while (itr.hasNext()) {
 				VMAgent agent = itr.next();
 				if (agent.getState() == State.TERMINATED) {
 					itr.remove();
-					logger.debug("VM Agent removed.");
+					logger.debug("Finished VMAgent removed.");
 				}
 			}
 		}
+
 		/* update VM status and remove unusable VMs */
 		synchronized (vmList) {
 			try {
@@ -145,14 +146,16 @@ public class ResourceManager {
 				while (itr.hasNext()) {
 					VMInstance vm = itr.next();
 
-					/* skip those who have jobs on them */
-					if (vm.getJobsAssigned() > 0) continue;
-
-					broker.updateInfo(vm);
-					if (vm.getStatus() != VMStatus.RUNNING) {
-						broker.finalizeVM(vm);
-						itr.remove();
-						logger.debug("VM removed.");
+					synchronized (vm) {
+						/* skip those who have jobs on them */
+						if (vm.getJobsAssigned() > 0) continue;
+	
+						broker.updateInfo(vm);
+						if (vm.getStatus() != VMStatus.RUNNING) {
+							broker.finalizeVM(vm);
+							itr.remove();
+							logger.debug("VM removed.");
+						}
 					}
 				}
 			} catch (BrokerException e) {
@@ -161,6 +164,28 @@ public class ResourceManager {
 			}
 		}
 	}
+
+
+	/**
+	 * Gets the number of VMInstances in the resource pool.
+	 * @return The number of VMInstances in the resource pool.
+	 */
+	public int getVMInstanceNumber() {
+		synchronized (this.vmList) {
+			return this.vmList.size();
+		}
+	}
+
+	/**
+	 * Gets the number of VMAgents running.
+	 * @return The number of VMAgents running.
+	 */
+	public int getVMAgentNumber() {
+		synchronized (this.vmAgentList) {
+			return this.vmAgentList.size();
+		}
+	}
+
 
 	/**
 	 * Gets the list of VM instances.
@@ -177,8 +202,8 @@ public class ResourceManager {
 	public void allocateVM() {
 		VMAgent vmAgent = new VMAgent();
 		vmAgent.start();
-		synchronized (vmAgentThreadList) {
-			vmAgentThreadList.add(vmAgent);
+		synchronized (vmAgentList) {
+			vmAgentList.add(vmAgent);
 		}
 	}
 
@@ -189,10 +214,11 @@ public class ResourceManager {
 	public void addVM(VMInstance vm) {
 		synchronized (vmList) {
 			vmList.add(vm);
-			String info = String.format(
-					"VM#%d has been added to the resource list.",
+			String msg = String.format(
+					"VM#%d has been added to the resource pool.",
 					vm.getId());
-			logger.debug(info);
+			logger.info(msg);
+			vmList.notifyAll();
 		}
 	}
 
