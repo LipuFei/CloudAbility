@@ -1,0 +1,1 @@
+res/sh/onevmdelall.sh
