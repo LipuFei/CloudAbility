@@ -1,0 +1,38 @@
+README for CloudAbility
+by Lipu Fei,  Oct. 25, 2012
+==============================
+
+1. How to use
+In order to run the tests, please follow the instructions below:
+
+1) put the configuration in the CloudAbility folder "config/cloud.config", and
+   then start the CloudAbility using "ant CloudAbility".
+2) start the client using "ant CloudClient".
+
+3) every time you want to submit a job, press ENTER in the client.
+
+4) you will see some statistics in the CloudAbility console, like:
+   [java] 305511 [Thread-6] DEBUG org.cloudability.scheduling.Scheduler  - VM#29678 has been selected.
+   [java] 305511 [Thread-6] DEBUG org.cloudability.scheduling.Scheduler  - No jobs available, freeing VM#29678.
+   [java] 306511 [Thread-6] INFO org.cloudability.scheduling.Scheduler  - Jobs in pending queue: 0.
+   [java] 306512 [Thread-6] INFO org.cloudability.scheduling.Scheduler  - JobMonitors running: 2.
+   [java] 306512 [Thread-6] INFO org.cloudability.scheduling.Scheduler  - VMInstances in resource pool: 5.
+   [java] 306512 [Thread-6] INFO org.cloudability.scheduling.Scheduler  - VMAgents running: 0.
+
+   If you just submitted a job, the #job-pending may probably be increased by 1
+   if there is no available VMs.
+
+5) Once you have finished submitting all the jobs, you can EXIT the CloudClient
+   by CTRL+C. Then you can observe the statistics in the CloudAbility console to
+   see if your jobs have all been finished (or failed).
+   In order to do this, please check the #JobMonitors metric. This number
+   indicates if there is any job currently running in the system.
+
+6) After all your jobs have been finished, press ENTER and CloudAbility will
+   finalize itself and store the statistics data in a file.
+
+7) However, it is also possible to exit CloudAbility while there still are some
+   jobs running. CloudAbility will first stop all of them, and then exit.
+   Please use "onevm list" command to check if all VMs created by CloudAbility
+   have been deleted. If not, there may probably be a bug. Please contact me
+   with some details.
