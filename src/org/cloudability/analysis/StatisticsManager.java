@@ -168,40 +168,43 @@ public class StatisticsManager {
 		/* overall job statistics */
 		writer.write("\nJob Statistics\n====================\n");
 		writer.write("Overall\n");
-		long makespan = 0;
-		long waitTime = 0;
-		long runningTime = 0;
-		long preparationTime = 0;
-		long uploadTime = 0;
-		long tarballExtractionTime = 0;
-		long executionTime = 0;
-		long downloadTime = 0;
+
+		long[] makespan = createMetric();
+		long[] waitTime = createMetric();
+		long[] runningTime = createMetric();
+		long[] preparationTime = createMetric();
+		long[] uploadTime = createMetric();
+		long[] tarballExtractionTime = createMetric();
+		long[] executionTime = createMetric();
+		long[] downloadTime = createMetric();
+
 		long totalNumber = 0;
+
 		Iterator<Entry<Integer, StatisticsData>> itr2 = jobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
 			Entry<Integer, StatisticsData> entry = itr2.next();
 			StatisticsData data = entry.getValue();
 
-			makespan += data.get("makespan");
-			waitTime += data.get("waitTime");
-			runningTime += data.get("runningTime");
-			preparationTime += data.get("preparationTime");
-			uploadTime += data.get("uploadTime");
-			tarballExtractionTime += data.get("tarballExtractionTime");
-			executionTime += data.get("executionTime");
-			downloadTime += data.get("downloadTime");
+			updateMetric(makespan, data.get("makespan"));
+			updateMetric(waitTime, data.get("waitTime"));
+			updateMetric(runningTime, data.get("runningTime"));
+			updateMetric(preparationTime, data.get("preparationTime"));
+			updateMetric(uploadTime, data.get("uploadTime"));
+			updateMetric(tarballExtractionTime, data.get("tarballExtractionTime"));
+			updateMetric(executionTime, data.get("executionTime"));
+			updateMetric(downloadTime, data.get("downloadTime"));
 
 			totalNumber++;
 		}
 		if (totalNumber != 0) {
-			content = String.format("makespan=%.3f sec\n", (double)makespan / totalNumber / 1000);
-			content += String.format("waitTime=%.3f sec\n", (double)waitTime / totalNumber / 1000);
-			content += String.format("runningTime=%.3f sec\n", (double)runningTime / totalNumber / 1000);
-			content += String.format("preparationTime=%.3f sec\n", (double)preparationTime / totalNumber / 1000);
-			content += String.format("uploadTime=%.3f sec\n", (double)uploadTime / totalNumber / 1000);
-			content += String.format("tarballExtractionTime=%.3f sec\n", (double)tarballExtractionTime / totalNumber / 1000);
-			content += String.format("executionTime=%.3f sec\n", (double)executionTime / totalNumber / 1000);
-			content += String.format("downloadTime=%.3f sec\n", (double)downloadTime / totalNumber / 1000);
+			content = String.format("makespan=%s sec\n", formatMetric(makespan, totalNumber));
+			content += String.format("waitTime=%s sec\n", formatMetric(waitTime, totalNumber));
+			content += String.format("runningTime=%s sec\n", formatMetric(runningTime, totalNumber));
+			content += String.format("preparationTime=%s sec\n", formatMetric(preparationTime, totalNumber));
+			content += String.format("uploadTime=%s sec\n", formatMetric(uploadTime, totalNumber));
+			content += String.format("tarballExtractionTime=%s sec\n", formatMetric(tarballExtractionTime, totalNumber));
+			content += String.format("executionTime=%s sec\n", formatMetric(executionTime, totalNumber));
+			content += String.format("downloadTime=%s sec\n", formatMetric(downloadTime, totalNumber));
 		}
 		else {
 			content = "null\n";
@@ -209,10 +212,53 @@ public class StatisticsManager {
 		writer.write(content);
 
 		/* detailed job statistics */
+		writer.write("\nDetails\n");
+		writer.write("#jobId arrivalTime makespan waitTime runningTime preparationTime uploadTime tarballExtractionTime executionTime downloadTime\n");
+		itr2 = jobStatisticsMap.entrySet().iterator();
+		while (itr2.hasNext()) {
+			Entry<Integer, StatisticsData> entry = itr2.next();
+			StatisticsData data = entry.getValue();
+
+			content = String.format("%d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\n",
+					entry.getKey(),
+					data.get("arrivalTime"),
+					(double)data.get("makespan") / 1000,
+					(double)data.get("waitTime") / 1000,
+					(double)data.get("runningTime") / 1000,
+					(double)data.get("preparationTime") / 1000,
+					(double)data.get("uploadTime") / 1000,
+					(double)data.get("tarballExtractionTime") / 1000,
+					(double)data.get("executionTime") / 1000,
+					(double)data.get("downloadTime") / 1000
+			);
+
+			writer.write(content);
+		}
 
 		/* flush and close */
 		writer.flush();
 		writer.close();
+	}
+
+	private long[] createMetric() {
+		long[] metric = new long[3];
+		metric[0] = Long.MAX_VALUE;
+		metric[1] = 0;
+		metric[2] = Long.MIN_VALUE;
+		return metric;
+	}
+
+	private void updateMetric(long[] metric, long value) {
+		metric[0] = metric[0] < value ? metric[0] : value;
+		metric[1] += value;
+		metric[2] = metric[2] > value ? metric[2] : value;
+	}
+
+	private String formatMetric(long[] metric, long total) {
+		return String.format("[%.3f %.3f %.3f]",
+				(double)metric[0] / total / 1000,
+				(double)metric[1] / total / 1000,
+				(double)metric[2] / total / 1000);
 	}
 
 }

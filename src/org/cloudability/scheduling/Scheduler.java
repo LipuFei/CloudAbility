@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
+import org.cloudability.analysis.StatisticsData;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.policy.Allocator;
@@ -192,22 +193,30 @@ public class Scheduler implements Runnable {
 	 * running, how many VMInstances do we have, etc.
 	 */
 	private void showStatus() {
+		long time = System.currentTimeMillis();
+		int pendingJobs = DataManager.instance().getPendingJobQueue().size();
+		int runningJobs = DataManager.instance().getJobMonitorNumber();
+		int vms = ResourceManager.instance().getVMInstanceNumber();
+		int vmagents = ResourceManager.instance().getVMAgentNumber();
+
 		String msg = String.format(
-				"Jobs in pending queue: %d.",
-				DataManager.instance().getPendingJobQueue().size());
+				"Jobs in pending queue: %d.", pendingJobs);
 		logger.info(msg);
 		msg = String.format(
-				"JobMonitors running: %d.",
-				DataManager.instance().getJobMonitorNumber());
+				"JobMonitors running: %d.", runningJobs);
 		logger.info(msg);
 		msg = String.format(
-				"VMInstances in resource pool: %d.",
-				ResourceManager.instance().getVMInstanceNumber());
+				"VMInstances in resource pool: %d.", vms);
 		logger.info(msg);
 		msg = String.format(
-				"VMAgents running: %d.",
-				ResourceManager.instance().getVMAgentNumber());
+				"VMAgents running: %d.", vmagents);
 		logger.info(msg);
+
+		StatisticsData data = new StatisticsData();
+		data.add("Time", time);
+		data.add("JobsPending", pendingJobs);
+		data.add("JobsRunning", runningJobs);
+		data.add("VMInstances", vms);
 	}
 
 }

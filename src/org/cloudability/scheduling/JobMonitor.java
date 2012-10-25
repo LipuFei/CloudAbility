@@ -94,6 +94,7 @@ public class JobMonitor extends Thread {
 		if (job.getStatus() == JobStatus.FINISHED) {
 			/* store the statistics of the job's performance */
 			JobProfiler profiler = job.getProfiler();
+			long arrivalTime = profiler.getMark("arrivalTime");
 			long makespan = profiler.getMark("finishTime") - profiler.getMark("arrivalTime");
 			long waitTime = profiler.getMark("startTime") - profiler.getMark("arrivalTime");
 			long runningTime = profiler.getMark("finishTime") - profiler.getMark("startTime");
@@ -109,6 +110,7 @@ public class JobMonitor extends Thread {
 			logger.info(msg);
 
 			StatisticsData data = new StatisticsData();
+			data.add("arrivalTime", arrivalTime);
 			data.add("makespan", makespan);
 			data.add("waitTime", waitTime);
 			data.add("runningTime", runningTime);
