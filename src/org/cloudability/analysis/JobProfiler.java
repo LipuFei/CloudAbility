@@ -1,17 +1,17 @@
 /**
- * 
+ * Copyright (C) 2012  Lipu Fei
  */
 package org.cloudability.analysis;
 
 import java.util.HashMap;
 
 /**
- * A profiler for evaluating the jobs' performances.
+ * A profiler for evaluating the job's performance.
  * @author Lipu Fei
  * @version 0.1
  *
  */
-public class Profiler {
+public class JobProfiler {
 
 	private HashMap<String, Long> markMap;
 	private HashMap<String, Long> statisticsMap;
@@ -19,7 +19,7 @@ public class Profiler {
 	/**
 	 * Constructor.
 	 */
-	public Profiler() {
+	public JobProfiler() {
 		this.markMap = new HashMap<String, Long>();
 		this.statisticsMap = new HashMap<String, Long>();
 	}
@@ -30,6 +30,10 @@ public class Profiler {
 	 */
 	public HashMap<String, Long> getStatisticsMap() {
 		return this.statisticsMap;
+	}
+
+	public long getMark(String key) {
+		return this.markMap.get(key);
 	}
 
 	/**

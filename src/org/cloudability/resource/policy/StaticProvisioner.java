@@ -55,8 +55,7 @@ public class StaticProvisioner extends Provisioner {
 	@Override
 	protected void initialize() {
 		for (int i = 0; i < allocationNumber; i++) {
-			VMInstance vm = new VMInstance(i + 1);
-			ResourceManager.instance().addVM(vm);
+			ResourceManager.instance().allocateVM();
 		}
 	}
 
@@ -87,6 +86,14 @@ public class StaticProvisioner extends Provisioner {
 				synchronized (vm) {
 					if (vm.getJobsAssigned() == 0) {
 						this.selectedVM = vm;
+						/* IMPORTANT: assign the VM here is because, the
+						 * provisioner thread regularly may release some VM if
+						 * they have been idle for a certain amount of time.
+						 * So if must use an atomic-like operation to assign
+						 * the VM that has been selected before the provisioner
+						 * thread can have access to it.
+						 */
+						vm.occupy();
 						break;
 					}
 				}

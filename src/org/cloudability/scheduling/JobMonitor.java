@@ -4,6 +4,8 @@
 package org.cloudability.scheduling;
 
 import org.apache.log4j.Logger;
+
+import org.cloudability.analysis.JobProfiler;
 import org.cloudability.scheduling.Job.JobStatus;
 
 /**
@@ -14,9 +16,11 @@ import org.cloudability.scheduling.Job.JobStatus;
  * @version 0.1
  *
  */
-public class JobMonitor implements Runnable {
+public class JobMonitor extends Thread {
 
 	private final static int defaultWaitInterval = 1000;
+
+	private Logger logger;
 
 	/* a signal that indicates if this execution should stop */
 	private volatile boolean toStop;
@@ -30,7 +34,11 @@ public class JobMonitor implements Runnable {
 	 * @param job The job to execute.
 	 */
 	public JobMonitor(Job job) {
+		super();
+
 		this.toStop = false;
+
+		this.logger = Logger.getLogger(JobMonitor.class);
 
 		this.job = job;
 		this.jobThread = null;
@@ -58,13 +66,13 @@ public class JobMonitor implements Runnable {
 			while (job.getStatus() != JobStatus.FINISHED &&
 					job.getStatus() != JobStatus.FAILED &&
 					job.getStatus() != JobStatus.STOPPED) {
-				synchronized (job) {
-					job.wait(defaultWaitInterval);
-				}
-
 				/* check stop signal  */
 				if (toStop) {
 					job.setToStop();
+				}
+
+				synchronized (job) {
+					job.wait(defaultWaitInterval);
 				}
 			}
 		} catch (InterruptedException e) {
@@ -72,9 +80,30 @@ public class JobMonitor implements Runnable {
 			e.printStackTrace();
 		}
 
-		/* post procedure */
+		/* free the VM */
+		job.getVMInstance().free();
+		String msg = String.format(
+				"VM#%d has been freed, current util=%d.",
+				job.getVMInstance().getId(),
+				job.getVMInstance().getJobsAssigned());
+		logger.debug(msg);
+
 		/* check job status */
 		if (job.getStatus() == JobStatus.FINISHED) {
+			/* store the statistics of the job's performance */
+			JobProfiler profiler = job.getProfiler();
+			long makeSpan = profiler.getMark("finishTime") - profiler.getMark("arrivalTime");
+			long runningTime = profiler.getMark("finishTime") - profiler.getMark("startTime");
+			long preparationTime = profiler.getPeriod("preparationTime");
+			long uploadTime = profiler.getPeriod("uploadTime");
+			long tarballExtractionTime = profiler.getPeriod("tarballExtractionTime");
+			long executionTime = profiler.getPeriod("executionTime");
+			long downloadTime = profiler.getPeriod("downloadTime");
+			msg = String.format(
+					"JOB#%d: makespan=%d; runningTime=%d; preparationTime=%d; uploadTime=%d; tarballExtractionTime=%d; executionTime=%d; downloadTime=%d.",
+					job.getId(), makeSpan, runningTime, preparationTime, uploadTime, tarballExtractionTime, executionTime, downloadTime);
+			logger.info(msg);
+
 			/* log the success */
 
 			/* TODO: put it into the finished job queue */
@@ -92,15 +121,6 @@ public class JobMonitor implements Runnable {
 			/* unexpected status */
 			
 		}
-
-		/* release the VM */
-		job.getVMInstance().free();
-		Logger logger = Logger.getLogger(JobMonitor.class);
-		String info = String.format(
-				"VM#%d has been freed, current util=%d.",
-				job.getVMInstance().getId(),
-				job.getVMInstance().getJobsAssigned());
-		logger.debug(info);
 	}
 
 }

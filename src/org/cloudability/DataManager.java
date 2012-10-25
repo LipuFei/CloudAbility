@@ -1,7 +1,9 @@
 package org.cloudability;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
+import org.cloudability.scheduling.JobMonitor;
 import org.cloudability.scheduling.JobQueue;
 import org.cloudability.util.CloudConfig;
 import org.cloudability.util.CloudConfigException;
@@ -21,6 +23,9 @@ public class DataManager {
 	/* configurations */
 	private volatile HashMap<String, String> configMap;
 
+	/* some nasty stuffs */
+	private LinkedList<JobMonitor> jobMonitorList;
+
 	/* three job queues */
 	private JobQueue pendingJobQueue;
 	private JobQueue runningJobQueue;
@@ -32,8 +37,9 @@ public class DataManager {
 	 */
 	public DataManager(String configFilePath) throws CloudConfigException  {
 		/* initialize the configuration map */
-		//this.configMap = new HashMap<String, String>();
 		this.configMap = CloudConfig.parseFile(configFilePath);
+
+		this.jobMonitorList = new LinkedList<JobMonitor>();
 
 		this.pendingJobQueue = new JobQueue();
 		this.runningJobQueue = new JobQueue();
@@ -72,6 +78,22 @@ public class DataManager {
 
 	public JobQueue getFinishedJobQueue() {
 		return this.finishedJobQueue;
+	}
+
+	public LinkedList<JobMonitor> getJobMonitorList() {
+		return this.jobMonitorList;
+	}
+
+	public int getJobMonitorNumber() {
+		synchronized (this.jobMonitorList) {
+			return this.jobMonitorList.size();
+		}
+	}
+
+	public void addJobMonitor(JobMonitor jobMonitor) {
+		synchronized (this.jobMonitorList) {
+			this.jobMonitorList.add(jobMonitor);
+		}
 	}
 
 }

@@ -6,6 +6,7 @@ package org.cloudability.resource;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * The VM instance object.
  * @author Lipu Fei
  * @version 0.1
  *
@@ -14,7 +15,7 @@ public class VMInstance {
 
 	/* Statuses of a VM instance */
 	public enum VMStatus {
-		PENDING, RUNNING, SHUTDOWN
+		PENDING, BOOTING, RUNNING, SHUTDOWN, UNKNOWN
 	}
 
 	private int id;
@@ -29,7 +30,7 @@ public class VMInstance {
 	 */
 	public VMInstance(int id) {
 		setId(id);
-		setStatus(VMStatus.PENDING);
+		setStatus(VMStatus.UNKNOWN);
 		this.jobsAssigned = new AtomicInteger(0);
 	}
 
@@ -65,9 +66,10 @@ public class VMInstance {
 	}
 
 	/**
-	 * Assigns a job to this VM instance.
+	 * Occupies this VM instance. It increase the number of jobs assigned to
+	 * this VM instance.
 	 */
-	public void assign() {
+	public void occupy() {
 		this.jobsAssigned.incrementAndGet();
 	}
 
