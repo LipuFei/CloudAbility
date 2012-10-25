@@ -1,0 +1,66 @@
+NAME   = CentOS-5.4
+CPU    = 1
+VCPU   = 4
+MEMORY = 512
+
+OS     = [
+  arch = x86_64
+]
+
+DISK   = [
+  IMAGE_ID = 35,
+#  DEV_PREFIX = hd,
+#  TARGET   = hda,
+  DRIVER   = qcow2,
+  READONLY = no
+]
+
+#DISK = [
+#  TYPE = swap,
+#  SIZE = 1024,
+#  TARGET = hdd,
+#  READONLY = no
+#]
+
+#DISK   = [
+#  TYPE = fs,
+#  SIZE = 2048,
+#  FORMAT = ext3,
+#  TARGET = hde,
+#  READONLY = no
+#]
+
+NIC    = [
+  # NETWORK = "Small network"
+  # OpenNebula API change: now refer to NETWORK ID:
+  NETWORK_ID=0
+]
+
+GRAPHICS = [
+  TYPE    = "vnc",
+  LISTEN  = "0.0.0.0"
+]
+
+FEATURES = [
+  # Needed for graceful shutdown with KVM:
+  acpi="yes"
+]
+
+RAW = [
+  type = "kvm",
+  data = " <serial type='pty'> <source path='/dev/pts/3'/> <target port='1'/> </serial>"
+]
+
+CONTEXT = [
+  hostname   = "$NAME",
+  # OpenNebula API change: now refer to NETWORK ID:
+  ip_public  = "$NIC[IP,      NETWORK_ID=0]",
+  dns        = "$NETWORK[DNS,     NETWORK_ID=0]",
+  gateway    = "$NETWORK[GATEWAY, NETWORK_ID=0]",
+  netmask    = "$NETWORK[NETMASK, NETWORK_ID=0]",
+  files      = "/cm/shared/package/OpenNebula/current/srv/cloud/configs/centos-5/init.sh /var/scratch/lfei/OpenNebula/id_dsa.pub",
+  target     = "hdc", 
+  root_pubkey = "id_dsa.pub",
+  username    = "opennebula",
+  user_pubkey = "id_dsa.pub"
+]
