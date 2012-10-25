@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 
 import org.apache.log4j.Logger;
 import org.cloudability.DataManager;
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.scheduling.Job;
 
 /**
@@ -84,6 +85,8 @@ public class ClientRequestHandler implements Runnable {
 
 			/* put job into the pending queue */
 			DataManager.instance().getPendingJobQueue().addJob(job);
+
+			StatisticsManager.instance().addAcceptedJob();
 
 		} catch (IOException e) {
 			String msg = String.format("IO exception: %s.", e.getMessage());

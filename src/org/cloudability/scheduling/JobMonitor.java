@@ -6,6 +6,8 @@ package org.cloudability.scheduling;
 import org.apache.log4j.Logger;
 
 import org.cloudability.analysis.JobProfiler;
+import org.cloudability.analysis.StatisticsData;
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.scheduling.Job.JobStatus;
 
 /**
@@ -92,21 +94,31 @@ public class JobMonitor extends Thread {
 		if (job.getStatus() == JobStatus.FINISHED) {
 			/* store the statistics of the job's performance */
 			JobProfiler profiler = job.getProfiler();
-			long makeSpan = profiler.getMark("finishTime") - profiler.getMark("arrivalTime");
+			long makespan = profiler.getMark("finishTime") - profiler.getMark("arrivalTime");
+			long waitTime = profiler.getMark("startTime") - profiler.getMark("arrivalTime");
 			long runningTime = profiler.getMark("finishTime") - profiler.getMark("startTime");
 			long preparationTime = profiler.getPeriod("preparationTime");
 			long uploadTime = profiler.getPeriod("uploadTime");
 			long tarballExtractionTime = profiler.getPeriod("tarballExtractionTime");
 			long executionTime = profiler.getPeriod("executionTime");
 			long downloadTime = profiler.getPeriod("downloadTime");
+
 			msg = String.format(
-					"JOB#%d: makespan=%d; runningTime=%d; preparationTime=%d; uploadTime=%d; tarballExtractionTime=%d; executionTime=%d; downloadTime=%d.",
-					job.getId(), makeSpan, runningTime, preparationTime, uploadTime, tarballExtractionTime, executionTime, downloadTime);
+					"JOB#%d: makespan=%d; waitTime=%d; runningTime=%d; preparationTime=%d; uploadTime=%d; tarballExtractionTime=%d; executionTime=%d; downloadTime=%d.",
+					job.getId(), makespan, waitTime, runningTime, preparationTime, uploadTime, tarballExtractionTime, executionTime, downloadTime);
 			logger.info(msg);
 
-			/* log the success */
+			StatisticsData data = new StatisticsData();
+			data.add("makespan", makespan);
+			data.add("waitTime", waitTime);
+			data.add("runningTime", runningTime);
+			data.add("preparationTime", preparationTime);
+			data.add("uploadTime", uploadTime);
+			data.add("tarballExtractionTime", tarballExtractionTime);
+			data.add("executionTime", executionTime);
+			data.add("downloadTime", downloadTime);
 
-			/* TODO: put it into the finished job queue */
+			StatisticsManager.instance().addJobStatistics(job.getId(), data);
 			
 		}
 		else if (job.getStatus() == JobStatus.FAILED) {

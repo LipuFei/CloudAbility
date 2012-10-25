@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
 import org.cloudability.analysis.JobProfiler;
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.VMInstance;
 import org.koala.internals.SSHHandler;
 
@@ -336,6 +337,8 @@ public class Job implements Runnable {
 			logger.debug(msg);
 			this.status = JobStatus.FINISHED;
 
+			StatisticsManager.instance().addFinishedJob();
+
 		} catch (Exception e) {
 			msg = String.format("JOB#%d exception during execution: %s.",
 					id, e.getMessage());
@@ -348,6 +351,8 @@ public class Job implements Runnable {
 			else {
 				this.status = JobStatus.FAILED;
 			}
+
+			StatisticsManager.instance().addFailedJob();
 		}
 
 		jobProfiler.mark("finishTime");

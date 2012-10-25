@@ -9,6 +9,7 @@ import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
 
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.VMInstance.VMStatus;
 import org.cloudability.resource.policy.Provisioner;
@@ -160,6 +161,8 @@ public class ResourceManager {
 							broker.finalizeVM(vm);
 							itr.remove();
 							logger.debug("VM removed.");
+
+							StatisticsManager.instance().addFinalizedVM();
 						}
 					}
 				}
@@ -212,6 +215,8 @@ public class ResourceManager {
 		synchronized (vmAgentList) {
 			vmAgentList.add(vmAgent);
 		}
+
+		StatisticsManager.instance().addVMAllocationAttempts();
 	}
 
 
@@ -228,6 +233,8 @@ public class ResourceManager {
 			logger.info(msg);
 			vmList.notifyAll();
 		}
+
+		StatisticsManager.instance().addAllocatedVM();
 	}
 
 

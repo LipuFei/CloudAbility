@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import org.apache.log4j.BasicConfigurator;
 
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
@@ -32,8 +33,9 @@ public class CloudAbility {
 	 * @param args
 	 * @throws BrokerException
 	 * @throws InterruptedException
+	 * @throws IOException 
 	 */
-	public static void main(String[] args) throws BrokerException, InterruptedException {
+	public static void main(String[] args) throws BrokerException, InterruptedException, IOException {
 		BasicConfigurator.configure();
 
 		/* common initialization */
@@ -49,13 +51,59 @@ public class CloudAbility {
 		//testJob();
 		//testVM();
 		//testJobWithVM();
-		testAuto();
+		//testSemiAuto();
+		testFullAuto();
 
 		/* finalize resource manager */
 		ResourceManager.instance().finalize();
+
+		/* save statistics */
+		StatisticsManager.instance().saveToFile("statistics.txt");
 	}
 
-	public static void testAuto() {
+	/**
+	 * This test tests full automation.
+	 * To exit the system, just press ENTER once, and it will start the
+	 * finalization. After the system has been finalized, a statistics file
+	 * will be created named "statistics.txt".
+	 */
+	public static void testFullAuto() {
+		/* start scheduler */
+		Scheduler scheduler = new Scheduler();
+		Thread schedulerThread = new Thread(scheduler);
+		schedulerThread.start();
+
+		/* start request listener */
+		int port = Integer.parseInt(
+			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
+			);
+		ClientRequestListener listener = new ClientRequestListener(port);
+		Thread listenThread = new Thread(listener);
+		listenThread.start();
+
+		try {
+			while (true) {
+				System.in.read();
+
+				/* stop listener */
+				listener.stopListening();
+				listenThread.join();
+
+				/* stop scheduler */
+				scheduler.setToStop();
+				schedulerThread.join();
+				break;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void testSemiAuto() {
 		/* start scheduler */
 		Scheduler scheduler = new Scheduler();
 		Thread schedulerThread = new Thread(scheduler);

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import com.trilead.ssh2.Session;
 
 import org.cloudability.DataManager;
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.VMInstance.VMStatus;
 import org.cloudability.util.BrokerException;
@@ -168,6 +169,8 @@ public class VMAgent extends Thread {
 				msg = String.format("Failed to finalize VM#%d: %s", vm.getId(), e1.getMessage());
 				logger.error(msg);
 			}
+
+			StatisticsManager.instance().addVMAllocationFailures();
 		}
 	}
 
