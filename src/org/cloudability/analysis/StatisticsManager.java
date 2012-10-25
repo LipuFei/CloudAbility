@@ -256,9 +256,9 @@ public class StatisticsManager {
 
 	private String formatMetric(long[] metric, long total) {
 		return String.format("[%.3f %.3f %.3f]",
-				(double)metric[0] / total / 1000,
+				(double)metric[0] / 1000,
 				(double)metric[1] / total / 1000,
-				(double)metric[2] / total / 1000);
+				(double)metric[2] / 1000);
 	}
 
 }
