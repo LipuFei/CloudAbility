@@ -205,3 +205,10 @@ Changes:
 5. A new metric "VM preparation time" has been added.
 
 
+2012-10-26  12:42  Lipu Fei
+==================================================
+Changes:
+1. The format of the statistics output file has been slightly changed.
+2. A so-called "Simple Elastic" provisioning policy has been added. Please
+   update the configuration file.
+

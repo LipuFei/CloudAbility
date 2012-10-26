@@ -192,7 +192,7 @@ public class Job implements Runnable {
 		try {
 			/* change status to running */
 			msg = String.format("Job#%d has been started...", id);
-			logger.debug(msg);
+			logger.info(msg);
 			this.status = JobStatus.RUNNING;
 
 			/*
@@ -201,7 +201,7 @@ public class Job implements Runnable {
 			jobProfiler.mark("uploadTime");
 
 			msg = String.format("Job#%d started uploading files...", id);
-			logger.debug(msg);
+			logger.info(msg);
 
 			SCPClient scpClient = SSHHandler.getScpClient(vmIp, vmUsername);
 			String inputSrcFiles[] = inputLocal.split(",");
@@ -220,7 +220,7 @@ public class Job implements Runnable {
 			jobProfiler.mark("tarballExtractionTime");
 			/* first uncompress the execution tarball */
 			msg = String.format("JOB#%d started extracting the tarball...", id);
-			logger.debug(msg);
+			logger.info(msg);
 
 			Session session = SSHHandler.getSession(vmIp, vmUsername);
 
@@ -282,7 +282,7 @@ public class Job implements Runnable {
 			jobProfiler.mark("executionTime");
 
 			msg = String.format("JOB#%d started execution...", id);
-			logger.debug(msg);
+			logger.info(msg);
 
 			cmd = String.format("%s/%s %s",
 					RemoteDir, appRemote, params);
@@ -344,7 +344,7 @@ public class Job implements Runnable {
 			jobProfiler.mark("downloadTime");
 
 			msg = String.format("JOB#%d started downloading the output file...", id);
-			logger.debug(msg);
+			logger.info(msg);
 			logger.debug(RemoteDir + "/" + outputRemote);
 			logger.debug(outputLocal);
 			scpClient.get(RemoteDir + "/" + outputRemote, outputLocal);
@@ -353,7 +353,7 @@ public class Job implements Runnable {
 
 			/* finish */
 			msg = String.format("Job#%d is finished.", id);
-			logger.debug(msg);
+			logger.info(msg);
 			this.status = JobStatus.FINISHED;
 
 			StatisticsManager.instance().addFinishedJob();

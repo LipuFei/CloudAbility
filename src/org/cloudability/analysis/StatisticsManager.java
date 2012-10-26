@@ -155,20 +155,20 @@ public class StatisticsManager {
 
 		String content = "";
 
-		writer.write("Statistics\n====================\n");
+		writer.write("====================\nStatistics\n====================\n");
 
 		/* system statistics */
-		writer.write("\nSystem Statistics\n====================\n");
-		content = String.format("#Jobs accepted: %d\n", systemStatisticsMap.get("JobsAccepted"));
-		content += String.format("#Jobs finished: %d\n", systemStatisticsMap.get("JobsFinished"));
-		content += String.format("#Jobs failures: %d\n", systemStatisticsMap.get("JobsFailures"));
+		writer.write("\n====================\nSystem Statistics\n====================\n");
+		content = String.format("Jobs accepted: %d\n", systemStatisticsMap.get("JobsAccepted"));
+		content += String.format("Jobs finished: %d\n", systemStatisticsMap.get("JobsFinished"));
+		content += String.format("Jobs failures: %d\n", systemStatisticsMap.get("JobsFailures"));
 
-		content += String.format("#VMs allocated: %d\n", systemStatisticsMap.get("VMsAllocated"));
-		content += String.format("#VMs finalized: %d\n", systemStatisticsMap.get("VMsFinalized"));
-		content += String.format("#Maximum existing VMs: %d\n", systemStatisticsMap.get("MaximumExistingVMs"));
+		content += String.format("VMs allocated: %d\n", systemStatisticsMap.get("VMsAllocated"));
+		content += String.format("VMs finalized: %d\n", systemStatisticsMap.get("VMsFinalized"));
+		content += String.format("Maximum existing VMs: %d\n", systemStatisticsMap.get("MaximumExistingVMs"));
 
-		content += String.format("#VM allocation attempts: %d\n", systemStatisticsMap.get("VMAllocationAttempts"));
-		content += String.format("#VM allocation failures: %d\n", systemStatisticsMap.get("VMAllocationFailures"));
+		content += String.format("VM allocation attempts: %d\n", systemStatisticsMap.get("VMAllocationAttempts"));
+		content += String.format("VM allocation failures: %d\n", systemStatisticsMap.get("VMAllocationFailures"));
 
 		long[] vmPreparationTime = createMetric();
 		Iterator<Long> itr1 = this.vmPreparationTimeList.iterator();
@@ -187,7 +187,7 @@ public class StatisticsManager {
 		writer.write(content);
 
 		/* overall job statistics */
-		writer.write("\nOverall Job Statistics\n====================\n");
+		writer.write("\n====================\nOverall Job Statistics\n====================\n");
 
 		long[] makespan = createMetric();
 		long[] waitTime = createMetric();
@@ -232,7 +232,7 @@ public class StatisticsManager {
 		writer.write(content);
 
 		/* detailed job statistics */
-		writer.write("\nDetail Job Statistics\n====================\n");
+		writer.write("\n====================\nDetail Job Statistics\n====================\n");
 		writer.write("#jobId arrivalTime makespan waitTime runningTime preparationTime uploadTime tarballExtractionTime executionTime downloadTime\n");
 		itr2 = jobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
@@ -256,7 +256,7 @@ public class StatisticsManager {
 		}
 
 		/* system performance over time */
-		writer.write("\nSystem Performance Over Time\n====================\n");
+		writer.write("\n====================\nSystem Performance Over Time\n====================\n");
 		writer.write("#Timestamp #JobsPending #JobsRunning #VMInstances\n");
 		Iterator<StatisticsData> itr3 = systemPerformanceList.iterator();
 		while (itr3.hasNext()) {

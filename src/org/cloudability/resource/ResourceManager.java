@@ -4,15 +4,18 @@
 package org.cloudability.resource;
 
 import java.lang.Thread.State;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
 
+import org.cloudability.DataManager;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.VMInstance.VMStatus;
 import org.cloudability.resource.policy.Provisioner;
+import org.cloudability.resource.policy.SimpleElasticProvisioner;
 import org.cloudability.resource.policy.StaticProvisioner;
 import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
@@ -62,7 +65,22 @@ public class ResourceManager {
 		_instance = new ResourceManager();
 
 		/* initialize provisioning policy */
-		_instance.provisioner = new StaticProvisioner();
+		HashMap<String, String> configMap =
+				DataManager.instance().getConfigMap();
+		String provisionerName = configMap.get("PROVISION.POLICY");
+
+		if (provisionerName.equals("STATIC")) {
+			_instance.provisioner = new StaticProvisioner();
+		}
+		else if (provisionerName.equals("SIMPLE_ELASTIC")) {
+			_instance.provisioner = new SimpleElasticProvisioner();
+		}
+		/* Unknown provisioning policy */
+		else {
+			String msg = String.format("Unknown provisioning policy name: %s.", provisionerName);
+			_instance.logger.error(msg);
+			throw new CloudConfigException(msg);
+		}
 
 		String info = "Resource Manager has been initialized.";
 		_instance.logger.info(info);
