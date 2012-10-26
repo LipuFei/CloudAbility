@@ -168,3 +168,26 @@ Notes:
    fail to allocate a usable VMInstance, this regular check will notice this
    and create another VMAgent to allocate one, so that the total number of
    VMInstances should be the desired number.
+
+
+2012-10-26  10:11  Lipu Fei
+==================================================
+Changes:
+1. Provisioner thread has been removed.
+2. The provisioner check is now a sequential method in the scheduling cycle, so
+   no need to worry about concurrency problems now.
+3. The updateStatus method has been moved from Scheduler to DataManager, and it
+   updates the jobs' waiting times.
+4. Jobs now updates its failure times when it fails or it is stopped, and
+   JobMonitor will put this job back into the pending queue again.
+5. The statistics MaxVMsExisting is now available.
+6. The System Performance Over Time is now available.
+7. A shutdown hook has been added. Now it is possible to exit with CTRL-C.
+
+Todos:
+1. Add a threshold to limit the maximum number of failures a job can have.
+   Otherwise some invalid jobs would be in the pending queue forever.
+2. May consider to remove JobMonitor, because there are too many threads in the
+   system now.
+3. The metric PreparationTime doesn't seem to be useful. Consider to remove it.
+

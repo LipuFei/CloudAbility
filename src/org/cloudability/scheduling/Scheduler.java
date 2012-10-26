@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
-import org.cloudability.analysis.StatisticsData;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.policy.Allocator;
@@ -26,7 +25,7 @@ public class Scheduler implements Runnable {
 
 	private final static int defaultWaitInterval = 1000;
 
-	private Logger logger;
+	private Logger logger = Logger.getLogger(Scheduler.class);
 
 	/* a signal indicates if to stop the scheduler */
 	private boolean toStop;
@@ -37,8 +36,6 @@ public class Scheduler implements Runnable {
 	 * Constructor.
 	 */
 	public Scheduler() {
-		this.logger = Logger.getLogger(Scheduler.class);
-
 		this.toStop = false;
 
 		/* initialize an allocator */
@@ -60,21 +57,21 @@ public class Scheduler implements Runnable {
 		logger.debug(msg);
 		try {
 			while (true) {
-				/* show the system status */
-				showStatus();
-
 				/* check toStop signal */
 				if (this.toStop) break;
 
 				/* Scheduler's regular check */
-				regularCheck();
+				this.regularCheck();
 				/* Resource manager's regular check */
 				ResourceManager.instance().regularCheck();
 
-				/* TODO: update job status, such as wait time, priority, etc. */
+				/* update job status, such as wait time, priority, etc. */
+				DataManager.instance().updateSystemStatus();
 
+				/* provisioner's regular check */
+				ResourceManager.instance().provisionerRegularCheck();
 
-				/* check available VM */
+				/* get an available VM */
 				VMInstance vm = ResourceManager.instance().getAvailableVM();
 				if (vm == null) {
 					/* wait for available resource notification */
@@ -85,30 +82,18 @@ public class Scheduler implements Runnable {
 					}
 					continue;
 				}
-				msg = String.format("VM#%d has been selected.", vm.getId());
-				logger.debug(msg);
 
-				/* select a job and assign a VM instance to it */
+				/* select a job */
 				Job job = this.allocator.select();
 				if (job == null) {
-					/*
-					 * The selected VM has invoked assign(), so if there is
-					 * no job available, we need to free it.
-					 */
-					synchronized (vm) {
-						msg = String.format("No jobs available, freeing VM#%d.", vm.getId());
-						logger.debug(msg);
-						vm.free();
-					}
 					synchronized (pendingQueue) {
 						pendingQueue.wait(defaultWaitInterval);
 					}
 					continue;
 				}
-				msg = String.format("JOB#%d has been selected.", job.getId());
-				logger.debug(msg);
 
-				/* assign VM instance and execute the job */
+				/* occupy the VM and execute the job on it */
+				vm.occupy();
 				job.setVMInstance(vm);
 				createJobMonitor(job);
 			}
@@ -185,38 +170,6 @@ public class Scheduler implements Runnable {
 
 		/* add into list */
 		DataManager.instance().addJobMonitor(jobMonitor);
-	}
-
-
-	/**
-	 * Shows the status of the system, including how many JobMonitors are
-	 * running, how many VMInstances do we have, etc.
-	 */
-	private void showStatus() {
-		long time = System.currentTimeMillis();
-		int pendingJobs = DataManager.instance().getPendingJobQueue().size();
-		int runningJobs = DataManager.instance().getJobMonitorNumber();
-		int vms = ResourceManager.instance().getVMInstanceNumber();
-		int vmagents = ResourceManager.instance().getVMAgentNumber();
-
-		String msg = String.format(
-				"Jobs in pending queue: %d.", pendingJobs);
-		logger.info(msg);
-		msg = String.format(
-				"JobMonitors running: %d.", runningJobs);
-		logger.info(msg);
-		msg = String.format(
-				"VMInstances in resource pool: %d.", vms);
-		logger.info(msg);
-		msg = String.format(
-				"VMAgents running: %d.", vmagents);
-		logger.info(msg);
-
-		StatisticsData data = new StatisticsData();
-		data.add("Time", time);
-		data.add("JobsPending", pendingJobs);
-		data.add("JobsRunning", runningJobs);
-		data.add("VMInstances", vms);
 	}
 
 }

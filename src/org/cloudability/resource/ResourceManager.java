@@ -39,7 +39,6 @@ public class ResourceManager {
 
 	/* provisioning policy */
 	private Provisioner provisioner;
-	private Thread provisionerThread;
 
 
 	/**
@@ -64,8 +63,6 @@ public class ResourceManager {
 
 		/* initialize provisioning policy */
 		_instance.provisioner = new StaticProvisioner();
-		/* start a thread for the provisioner */
-		_instance.provisionerThread = new Thread(_instance.provisioner); 
 
 		String info = "Resource Manager has been initialized.";
 		_instance.logger.info(info);
@@ -86,15 +83,8 @@ public class ResourceManager {
 	 */
 	public void finalize() {
 		try {
-			/* stop the provisioning thread */
-			String msg = "Stopping provisioner thread...";
-			_instance.logger.info(msg);
-
-			_instance.provisioner.setStop();
-			_instance.provisionerThread.join();
-
 			/* stop all VM Agents */
-			msg = "Stopping all VM Agents...";
+			String msg = "Stopping all VM Agents...";
 			_instance.logger.info(msg);
 			Iterator<VMAgent> itrAgent = vmAgentList.iterator();
 			while (itrAgent.hasNext()) {
@@ -113,7 +103,8 @@ public class ResourceManager {
 				borker.finalizeVM(vm);
 			}
 
-			_instance.vmList.clear();
+			vmAgentList.clear();
+			vmList.clear();
 		} catch (InterruptedException e) {
 			String msg = String.format(
 					"Provisioner thread interrupted while joining: %s.",
@@ -171,9 +162,11 @@ public class ResourceManager {
 				logger.error(msg);
 			}
 		}
+	}
 
-		/* do the provisioner check */
-		this.provisioner.check();
+
+	public void provisionerRegularCheck() {
+		this.provisioner.regularCheck();
 	}
 
 

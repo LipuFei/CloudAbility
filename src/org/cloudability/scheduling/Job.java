@@ -77,6 +77,9 @@ public class Job implements Runnable {
 		this.id = id;
 		this.vmInstance = null;
 		this.parameterMap = parameterMap;
+
+		this.waitTime = 0;
+		this.failure = 0;
 	}
 
 	/**
@@ -85,6 +88,21 @@ public class Job implements Runnable {
 	 */
 	public synchronized static int generateJobID() {
 		return maxJobId++;
+	}
+
+	/**
+	 * Updates a job's wait time.
+	 */
+	public void updateWaitTime() {
+		this.waitTime = System.currentTimeMillis() - this.arrivalTime;
+	}
+
+	public long getWaitTime() {
+		return this.waitTime;
+	}
+
+	public int getFailure() {
+		return this.failure;
 	}
 
 	@Override
@@ -208,6 +226,7 @@ public class Job implements Runnable {
 
 			String cmd = String.format("tar xzvf %s/%s --directory=%s",
 					RemoteDir, tarballName, RemoteDir);
+			logger.debug(String.format("JOB#%d: %s", id, cmd));
 
 			InputStream stdout = new StreamGobbler(session.getStdout());
 			BufferedReader outRd = new BufferedReader(new InputStreamReader(stdout));
@@ -267,7 +286,7 @@ public class Job implements Runnable {
 
 			cmd = String.format("%s/%s %s",
 					RemoteDir, appRemote, params);
-			logger.debug(cmd);
+			logger.debug(String.format("JOB#%d: %s", id, cmd));
 
 			session = SSHHandler.getSession(vmIp, vmUsername);
 
@@ -352,7 +371,10 @@ public class Job implements Runnable {
 				this.status = JobStatus.FAILED;
 			}
 
-			StatisticsManager.instance().addFailedJob();
+			/* increase number of failures */
+			this.failure++;
+
+			StatisticsManager.instance().addJobsFailure();
 		}
 
 		jobProfiler.mark("finishTime");

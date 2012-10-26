@@ -5,6 +5,7 @@ package org.cloudability.scheduling;
 
 import org.apache.log4j.Logger;
 
+import org.cloudability.DataManager;
 import org.cloudability.analysis.JobProfiler;
 import org.cloudability.analysis.StatisticsData;
 import org.cloudability.analysis.StatisticsManager;
@@ -78,8 +79,10 @@ public class JobMonitor extends Thread {
 				}
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String msg = String.format(
+					"Interrupted while waiting for JOB#%d: %s.",
+					job.getId(), e.getMessage());
+			logger.error(msg);
 		}
 
 		/* free the VM */
@@ -121,19 +124,30 @@ public class JobMonitor extends Thread {
 			data.add("downloadTime", downloadTime);
 
 			StatisticsManager.instance().addJobStatistics(job.getId(), data);
-			
+
 		}
 		else if (job.getStatus() == JobStatus.FAILED) {
 			/* log the failure */
+			msg = String.format("JOB#%d has failed.", job.getId());
+			logger.info(msg);
 
-			/* TODO: put it into the pending queue again */
+			/* put it back into the pending queue again */
+			job.setStatus(JobStatus.PENDING);
+			DataManager.instance().getPendingJobQueue().addJob(job);
 		}
 		else if (job.getStatus() == JobStatus.STOPPED) {
 			/* log this situation */
+			msg = String.format("JOB#%d has been stopped.", job.getId());
+			logger.info(msg);
+
+			/* put it back into the pending queue again */
+			job.setStatus(JobStatus.PENDING);
+			DataManager.instance().getPendingJobQueue().addJob(job);
 		}
 		else {
 			/* unexpected status */
-			
+			msg = String.format("unexpected status for JOB#%d.", job.getId());
+			logger.info(msg);
 		}
 	}
 

@@ -29,6 +29,11 @@ import org.koala.internals.SSHHandler;
  */
 public class CloudAbility {
 
+	public static Scheduler scheduler;
+	public static Thread listenerThread;
+	public static ClientRequestListener listener;
+	public static Thread schedulerThread;
+
 	/**
 	 * @param args
 	 * @throws BrokerException
@@ -37,6 +42,9 @@ public class CloudAbility {
 	 */
 	public static void main(String[] args) throws BrokerException, InterruptedException, IOException {
 		BasicConfigurator.configure();
+
+		/* add shutdown hook */
+		Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownHook()));
 
 		/* common initialization */
 		try {
@@ -55,10 +63,10 @@ public class CloudAbility {
 		testFullAuto();
 
 		/* finalize resource manager */
-		ResourceManager.instance().finalize();
+		//ResourceManager.instance().finalize();
 
 		/* save statistics */
-		StatisticsManager.instance().saveToFile("statistics.txt");
+		//StatisticsManager.instance().saveToFile("statistics.txt");
 	}
 
 	/**
@@ -69,35 +77,24 @@ public class CloudAbility {
 	 */
 	public static void testFullAuto() {
 		/* start scheduler */
-		Scheduler scheduler = new Scheduler();
-		Thread schedulerThread = new Thread(scheduler);
+		scheduler = new Scheduler();
+		schedulerThread = new Thread(scheduler);
 		schedulerThread.start();
 
 		/* start request listener */
 		int port = Integer.parseInt(
 			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
 			);
-		ClientRequestListener listener = new ClientRequestListener(port);
-		Thread listenThread = new Thread(listener);
-		listenThread.start();
+		listener = new ClientRequestListener(port);
+		listenerThread = new Thread(listener);
+		listenerThread.start();
 
 		try {
 			while (true) {
 				System.in.read();
-
-				/* stop listener */
-				listener.stopListening();
-				listenThread.join();
-
-				/* stop scheduler */
-				scheduler.setToStop();
-				schedulerThread.join();
-				break;
+				System.exit(0);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

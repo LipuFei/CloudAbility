@@ -13,13 +13,10 @@ import org.cloudability.util.CloudConfigException;
  * @version 0.1
  *
  */
-public abstract class Provisioner implements Runnable {
+public abstract class Provisioner {
 
 	/* the selected VM instance. */
 	protected VMInstance selectedVM;
-
-	/* stop signal */
-	protected boolean toStop;
 
 	/**
 	 * Constructor.
@@ -27,18 +24,10 @@ public abstract class Provisioner implements Runnable {
 	 */
 	public Provisioner() throws CloudConfigException {
 		this.selectedVM = null;
-		this.toStop = false;
 		/* parse parameters */
 		parseParameters();
 		/* initialize */
 		initialize();
-	}
-
-	/**
-	 * Sets the stop signal.
-	 */
-	public void setStop() {
-		this.toStop = true;
 	}
 
 	/**
@@ -65,7 +54,7 @@ public abstract class Provisioner implements Runnable {
 		return this.selectedVM;
 	}
 
-	public abstract void check();
+	public abstract void regularCheck();
 
 	/**
 	 * This method is invoked before provisioning.

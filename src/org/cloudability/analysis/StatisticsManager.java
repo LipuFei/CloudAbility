@@ -12,7 +12,8 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 
 /**
- * 
+ * Responsible for collecting system performance results and print them to a
+ * file.
  * @author Lipu Fei
  * @version 0.1
  *
@@ -46,11 +47,11 @@ public class StatisticsManager {
 		long value = 0;
 		this.systemStatisticsMap.put("JobsAccepted", value);
 		this.systemStatisticsMap.put("JobsFinished", value);
-		this.systemStatisticsMap.put("JobsFailed", value);
+		this.systemStatisticsMap.put("JobsFailures", value);
 
 		this.systemStatisticsMap.put("VMsAllocated", value);
 		this.systemStatisticsMap.put("VMsFinalized", value);
-		this.systemStatisticsMap.put("MaximumVMsExisting", value);
+		this.systemStatisticsMap.put("MaximumExistingVMs", value);
 
 		this.systemStatisticsMap.put("VMAllocationAttempts", value);
 		this.systemStatisticsMap.put("VMAllocationFailures", value);
@@ -90,10 +91,10 @@ public class StatisticsManager {
 		}
 	}
 
-	public void addFailedJob() {
+	public void addJobsFailure() {
 		synchronized (this.systemStatisticsMap) {
-			long value = this.systemStatisticsMap.remove("JobsFailed");
-			this.systemStatisticsMap.put("JobsFailed", value + 1);
+			long value = this.systemStatisticsMap.remove("JobsFailures");
+			this.systemStatisticsMap.put("JobsFailures", value + 1);
 		}
 	}
 
@@ -125,6 +126,14 @@ public class StatisticsManager {
 		}
 	}
 
+	public void updateMaximumExistingVMs(long vms) {
+		synchronized (this.systemStatisticsMap) {
+			long value = this.systemStatisticsMap.remove("MaximumExistingVMs");
+			value = value > vms ? value : vms;
+			this.systemStatisticsMap.put("MaximumExistingVMs", value);
+		}
+	}
+
 	/**
 	 * Saves statistics to a specified file.
 	 * @param outFilePath
@@ -142,7 +151,7 @@ public class StatisticsManager {
 		writer.write("\nSystem Statistics\n====================\n");
 		content = String.format("#Jobs accepted: %d\n", systemStatisticsMap.get("JobsAccepted"));
 		content += String.format("#Jobs finished: %d\n", systemStatisticsMap.get("JobsFinished"));
-		content += String.format("#Jobs failed: %d\n", systemStatisticsMap.get("JobsFailed"));
+		content += String.format("#Jobs failures: %d\n", systemStatisticsMap.get("JobsFailures"));
 
 		content += String.format("#VMs allocated: %d\n", systemStatisticsMap.get("VMsAllocated"));
 		content += String.format("#VMs finalized: %d\n", systemStatisticsMap.get("VMsFinalized"));
@@ -151,19 +160,6 @@ public class StatisticsManager {
 		content += String.format("#VM allocation attempts: %d\n", systemStatisticsMap.get("VMAllocationAttempts"));
 		content += String.format("#VM allocation failures: %d\n", systemStatisticsMap.get("VMAllocationFailures"));
 		writer.write(content);
-
-		/* system performance over time */
-		writer.write("\nSystem Statistics\n====================\n");
-		writer.write("Time #JobsPending #JobsRunning #VMInstances\n");
-		Iterator<StatisticsData> itr1 = systemPerformanceList.iterator();
-		while (itr1.hasNext()) {
-			StatisticsData data = itr1.next();
-			content = String.format("%d %d %d %d\n",
-					data.get("Time"),
-					data.get("JobsPending"),
-					data.get("JobsRunning"),
-					data.get("VMInstances"));
-		}
 
 		/* overall job statistics */
 		writer.write("\nJob Statistics\n====================\n");
@@ -232,6 +228,20 @@ public class StatisticsManager {
 					(double)data.get("downloadTime") / 1000
 			);
 
+			writer.write(content);
+		}
+
+		/* system performance over time */
+		writer.write("\nSystem Performance Over Time\n====================\n");
+		writer.write("#Timestamp #JobsPending #JobsRunning #VMInstances\n");
+		Iterator<StatisticsData> itr1 = systemPerformanceList.iterator();
+		while (itr1.hasNext()) {
+			StatisticsData data = itr1.next();
+			content = String.format("%d %d %d %d\n",
+					data.get("Time"),
+					data.get("JobsPending"),
+					data.get("JobsRunning"),
+					data.get("VMInstances"));
 			writer.write(content);
 		}
 
