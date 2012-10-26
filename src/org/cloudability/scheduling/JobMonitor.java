@@ -21,6 +21,8 @@ import org.cloudability.scheduling.Job.JobStatus;
  */
 public class JobMonitor extends Thread {
 
+	/* default timeout for a job is 4 minutes */
+	private final static long defaultTimeout = 4 * 60 * 1000;
 	private final static int defaultWaitInterval = 1000;
 
 	private Logger logger;
@@ -60,6 +62,8 @@ public class JobMonitor extends Thread {
 	 */
 	@Override
 	public void run() {
+		long startTime = System.currentTimeMillis();
+
 		/* execute the job in another thread */
 		jobThread = new Thread(job);
 		jobThread.start();
@@ -71,6 +75,11 @@ public class JobMonitor extends Thread {
 					job.getStatus() != JobStatus.STOPPED) {
 				/* check stop signal  */
 				if (toStop) {
+					job.setToStop();
+				}
+
+				/* check timeout */
+				if (System.currentTimeMillis() - startTime > defaultTimeout) {
 					job.setToStop();
 				}
 

@@ -96,11 +96,11 @@ public class ResourceManager {
 			/* release all VMs */
 			msg = "Releasing all VM instances...";
 			_instance.logger.info(msg);
-			CloudBroker borker = CloudBroker.createBroker("ONE");
+			CloudBroker broker = CloudBroker.createBroker("ONE");
 			Iterator<VMInstance> itrVM = _instance.vmList.iterator();
 			while (itrVM.hasNext()) {
 				VMInstance vm = itrVM.next();
-				borker.finalizeVM(vm);
+				broker.finalizeVM(vm);
 			}
 
 			vmAgentList.clear();
@@ -231,6 +231,28 @@ public class ResourceManager {
 		}
 
 		StatisticsManager.instance().addAllocatedVM();
+	}
+
+
+	/**
+	 * Finalizes a VM instance and remove it from the resource list.
+	 * @param vmInstance The VM instance to be finalized and removed.
+	 */
+	public void finalizeVM(VMInstance vm) {
+		synchronized (vmList) {
+			try {
+				CloudBroker broker = CloudBroker.createBroker("ONE");
+				broker.finalizeVM(vm);
+				vmList.remove(vm);
+
+				logger.debug("VM removed.");
+
+				StatisticsManager.instance().addFinalizedVM();
+			} catch (BrokerException e) {
+				String msg = String.format("Cannot finalize VM#%d: %s.", vm.getId(), e.getMessage());
+				logger.error(msg);
+			}
+		}
 	}
 
 

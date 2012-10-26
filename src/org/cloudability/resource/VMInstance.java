@@ -22,7 +22,12 @@ public class VMInstance {
 	private VMStatus status;
 	private String ipAddress;
 
-	private AtomicInteger jobsAssigned;	/* number of jobs assigned to this VM */
+	/* number of jobs assigned to this VM */
+	private AtomicInteger jobsAssigned;
+
+	/* the last time this VM instance becomes idle */
+	private long lastTimeBecomesIdle;
+	private long aggregateIdleTime;
 
 	/**
 	 * Constructor.
@@ -32,6 +37,9 @@ public class VMInstance {
 		setId(id);
 		setStatus(VMStatus.UNKNOWN);
 		this.jobsAssigned = new AtomicInteger(0);
+
+		this.lastTimeBecomesIdle = System.currentTimeMillis();
+		this.aggregateIdleTime = 0;
 	}
 
 	@Override
@@ -42,6 +50,12 @@ public class VMInstance {
 		if (this.id == vm.id) return true;
 
 		return false;
+	}
+
+	public long updateAggregateIdleTime() {
+		this.aggregateIdleTime =
+				System.currentTimeMillis() - this.lastTimeBecomesIdle;
+		return this.aggregateIdleTime;
 	}
 
 	public void setId(int id) {
@@ -78,6 +92,8 @@ public class VMInstance {
 	 */
 	public void free() {
 		this.jobsAssigned.decrementAndGet();
+		this.lastTimeBecomesIdle = System.currentTimeMillis();
+
 		/* notify all */
 		synchronized (ResourceManager.instance().getVMList()) {
 			ResourceManager.instance().getVMList().notifyAll();

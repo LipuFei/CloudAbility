@@ -60,6 +60,19 @@ public class StaticProvisioner extends Provisioner {
 	}
 
 	/**
+	 * Checks if total number of VMs meets the demand.
+	 */
+	@Override
+	public void regularCheck() {
+		int currentNumber = ResourceManager.instance().getVMAgentNumber() +
+				ResourceManager.instance().getVMInstanceNumber();
+		int toAllocate = allocationNumber - currentNumber;
+		while (toAllocate-- > 0) {
+			ResourceManager.instance().allocateVM();
+		}
+	}
+
+	/**
 	 * Does nothing.
 	 */
 	@Override
@@ -91,19 +104,6 @@ public class StaticProvisioner extends Provisioner {
 	 */
 	@Override
 	protected void postprocess() {
-	}
-
-	/**
-	 * Check if total number of VMs
-	 */
-	@Override
-	public void regularCheck() {
-		int currentNumber = ResourceManager.instance().getVMAgentNumber() +
-				ResourceManager.instance().getVMInstanceNumber();
-		int toAllocate = allocationNumber - currentNumber;
-		while (toAllocate-- > 0) {
-			ResourceManager.instance().allocateVM();
-		}
 	}
 
 }

@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
  * @version 0.1
  *
  */
-public class ClientRequestListener implements Runnable {
+public class ClientRequestListener extends Thread {
 
 	/* for each try, the listening thread blocks for 1sec */
 	private final static int blockingPeriod = 1000;
@@ -37,6 +37,8 @@ public class ClientRequestListener implements Runnable {
 	 * @param port The port to listen.
 	 */
 	public ClientRequestListener(int port) {
+		super();
+
 		this.logger = Logger.getLogger(ClientRequestListener.class);
 
 		this.threadPool = new LinkedList<Thread>();

@@ -29,6 +29,9 @@ public class StatisticsManager {
 	/* maintains system performance over time */
 	private LinkedList<StatisticsData> systemPerformanceList;
 
+	/* for calculating VM preparation time */
+	private LinkedList<Long> vmPreparationTimeList;
+
 	/* maintains system statistics,
 	 * such as #jobs-finished, #jobs-failed, etc.
 	 */
@@ -39,6 +42,7 @@ public class StatisticsManager {
 		this.jobStatisticsMap = new HashMap<Integer, StatisticsData>();
 		this.systemPerformanceList = new LinkedList<StatisticsData>();
 		this.systemStatisticsMap = new HashMap<String, Long>();
+		this.vmPreparationTimeList = new LinkedList<Long>();
 
 		this.initializeSystemStatisticsMap();
 	}
@@ -134,6 +138,12 @@ public class StatisticsManager {
 		}
 	}
 
+	public void addVMPreparationTime(long time) {
+		synchronized (this.vmPreparationTimeList) {
+			this.vmPreparationTimeList.add(time);
+		}
+	}
+
 	/**
 	 * Saves statistics to a specified file.
 	 * @param outFilePath
@@ -159,11 +169,25 @@ public class StatisticsManager {
 
 		content += String.format("#VM allocation attempts: %d\n", systemStatisticsMap.get("VMAllocationAttempts"));
 		content += String.format("#VM allocation failures: %d\n", systemStatisticsMap.get("VMAllocationFailures"));
+
+		long[] vmPreparationTime = createMetric();
+		Iterator<Long> itr1 = this.vmPreparationTimeList.iterator();
+		while (itr1.hasNext()) {
+			updateMetric(vmPreparationTime, itr1.next());
+		}
+		if (this.vmPreparationTimeList.size() > 0) {
+			content += String.format(
+					"VM preparation time: %s sec\n",
+					formatMetric(vmPreparationTime, this.vmPreparationTimeList.size()));
+		}
+		else {
+			content += "VM preparation time: null\n";
+		}
+
 		writer.write(content);
 
 		/* overall job statistics */
-		writer.write("\nJob Statistics\n====================\n");
-		writer.write("Overall\n");
+		writer.write("\nOverall Job Statistics\n====================\n");
 
 		long[] makespan = createMetric();
 		long[] waitTime = createMetric();
@@ -208,7 +232,7 @@ public class StatisticsManager {
 		writer.write(content);
 
 		/* detailed job statistics */
-		writer.write("\nDetails\n");
+		writer.write("\nDetail Job Statistics\n====================\n");
 		writer.write("#jobId arrivalTime makespan waitTime runningTime preparationTime uploadTime tarballExtractionTime executionTime downloadTime\n");
 		itr2 = jobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
@@ -234,14 +258,15 @@ public class StatisticsManager {
 		/* system performance over time */
 		writer.write("\nSystem Performance Over Time\n====================\n");
 		writer.write("#Timestamp #JobsPending #JobsRunning #VMInstances\n");
-		Iterator<StatisticsData> itr1 = systemPerformanceList.iterator();
-		while (itr1.hasNext()) {
-			StatisticsData data = itr1.next();
+		Iterator<StatisticsData> itr3 = systemPerformanceList.iterator();
+		while (itr3.hasNext()) {
+			StatisticsData data = itr3.next();
 			content = String.format("%d %d %d %d\n",
 					data.get("Time"),
 					data.get("JobsPending"),
 					data.get("JobsRunning"),
 					data.get("VMInstances"));
+
 			writer.write(content);
 		}
 

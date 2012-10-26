@@ -150,6 +150,9 @@ public class VMAgent extends Thread {
 			/* VM instance is ready, put it into the resource list */
 			ResourceManager.instance().addVM(vm);
 
+			long preparationTime = System.currentTimeMillis() - startTime;
+			StatisticsManager.instance().addVMPreparationTime(preparationTime);
+
 		} catch (Exception e) {
 			try {
 				if (vm != null) {

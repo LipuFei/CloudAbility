@@ -3,7 +3,6 @@
  */
 package org.cloudability.scheduling;
 
-import java.lang.Thread.State;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -21,7 +20,7 @@ import org.cloudability.scheduling.policy.FCFSAllocator;
  * @version 0.1
  *
  */
-public class Scheduler implements Runnable {
+public class Scheduler extends Thread {
 
 	private final static int defaultWaitInterval = 1000;
 
@@ -36,6 +35,8 @@ public class Scheduler implements Runnable {
 	 * Constructor.
 	 */
 	public Scheduler() {
+		super();
+
 		this.toStop = false;
 
 		/* initialize an allocator */

@@ -25,7 +25,7 @@ public class ShutdownHook implements Runnable {
 	@Override
 	public void run() {
 		/* stop listener */
-		CloudAbility.listener.stopListening();
+		CloudAbility.listenerThread.stopListening();
 		try {
 			CloudAbility.listenerThread.join();
 		} catch (InterruptedException e1) {
@@ -34,7 +34,7 @@ public class ShutdownHook implements Runnable {
 		}
 
 		/* stop scheduler */
-		CloudAbility.scheduler.setToStop();
+		CloudAbility.schedulerThread.setToStop();
 		try {
 			CloudAbility.schedulerThread.join();
 		} catch (InterruptedException e1) {

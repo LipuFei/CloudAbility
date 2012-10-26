@@ -8,7 +8,6 @@ import java.util.HashMap;
 
 import org.apache.log4j.BasicConfigurator;
 
-import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
@@ -18,9 +17,6 @@ import org.cloudability.server.ClientRequestListener;
 import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
 
-import org.koala.internals.SSHException;
-import org.koala.internals.SSHHandler;
-
 /**
  * The main class of CloudAbility
  * @author Lipu Fei
@@ -29,10 +25,8 @@ import org.koala.internals.SSHHandler;
  */
 public class CloudAbility {
 
-	public static Scheduler scheduler;
-	public static Thread listenerThread;
-	public static ClientRequestListener listener;
-	public static Thread schedulerThread;
+	public static ClientRequestListener listenerThread;
+	public static Scheduler schedulerThread;
 
 	/**
 	 * @param args
@@ -77,16 +71,14 @@ public class CloudAbility {
 	 */
 	public static void testFullAuto() {
 		/* start scheduler */
-		scheduler = new Scheduler();
-		schedulerThread = new Thread(scheduler);
+		schedulerThread = new Scheduler();
 		schedulerThread.start();
 
 		/* start request listener */
 		int port = Integer.parseInt(
 			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
 			);
-		listener = new ClientRequestListener(port);
-		listenerThread = new Thread(listener);
+		listenerThread = new ClientRequestListener(port);
 		listenerThread.start();
 
 		try {

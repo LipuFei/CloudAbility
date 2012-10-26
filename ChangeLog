@@ -191,3 +191,17 @@ Todos:
    system now.
 3. The metric PreparationTime doesn't seem to be useful. Consider to remove it.
 
+
+2012-10-26  11:59  Lipu Fei
+==================================================
+Changes:
+1. Scheduler is now a subclass of Thread instead of implementing Runnable. This
+   is for control convenience consideration.
+2. ClientRequestListener is now a subclass of Thread instead of implementing
+   Runnable. This is for control convenience consideration.
+3. Now there is a timeout for each running job. The timeout is 4 minutes. This
+   change is made in JobMonitor.
+4. VM instances now have aggregate idle times.
+5. A new metric "VM preparation time" has been added.
+
+
