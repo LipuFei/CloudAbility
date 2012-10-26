@@ -37,7 +37,6 @@ public class XmlRpcBroker {
 		this.password = password;
 
 		/* initialize configuration. */
-		System.out.println("Initializing client configuration");
 		XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
 		try {
 			config.setServerURL(new URL(this.serverUrl));
@@ -50,7 +49,6 @@ public class XmlRpcBroker {
 		config.setBasicPassword(this.password);
 
 		/* initialize client. */
-		System.out.println("Initializing client");
 		this.client = new XmlRpcClient();
 		this.client.setConfig(config);
 	}

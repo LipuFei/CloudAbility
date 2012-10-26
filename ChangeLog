@@ -221,3 +221,7 @@ Changes:
 3. The statistics module now collects VMInstance profilers and can generate
    individual VMInstance profiling results in the final report.
 
+Todos:
+1. VMInstance management and profiling modules are in a total mass right now.
+   They must be redesigned later.
+
