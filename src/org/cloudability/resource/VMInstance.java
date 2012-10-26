@@ -5,6 +5,8 @@ package org.cloudability.resource;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.cloudability.analysis.Profiler;
+
 /**
  * The VM instance object.
  * @author Lipu Fei
@@ -17,6 +19,8 @@ public class VMInstance {
 	public enum VMStatus {
 		PENDING, BOOTING, RUNNING, SHUTDOWN, UNKNOWN
 	}
+
+	private Profiler profiler = new Profiler();
 
 	private int id;
 	private VMStatus status;
@@ -40,6 +44,10 @@ public class VMInstance {
 
 		this.lastTimeBecomesIdle = System.currentTimeMillis();
 		this.aggregateIdleTime = 0;
+	}
+
+	public Profiler getProfiler() {
+		return this.profiler;
 	}
 
 	@Override
@@ -84,13 +92,17 @@ public class VMInstance {
 	 * this VM instance.
 	 */
 	public void occupy() {
+		this.profiler.mark("idleTime");
 		this.jobsAssigned.incrementAndGet();
+		this.profiler.mark("busyTime");
 	}
 
 	/**
 	 * Frees a job to this VM instance.
 	 */
 	public void free() {
+		this.profiler.mark("busyTime");
+		this.profiler.mark("idleTime");
 		this.jobsAssigned.decrementAndGet();
 		this.lastTimeBecomesIdle = System.currentTimeMillis();
 

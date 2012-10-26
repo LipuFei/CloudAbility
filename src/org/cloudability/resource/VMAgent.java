@@ -64,7 +64,10 @@ public class VMAgent extends Thread {
 			CloudBroker borker = CloudBroker.createBroker("ONE");
 			vm = borker.allocateVM();
 
+			vm.getProfiler().mark("startTime");
+
 			/* wait for the VM instance to be RUNNING */
+			vm.getProfiler().mark("bootingTime");
 			msg = String.format("Agent is waiting for VM#%d to be RUNNING...", vm.getId());
 			logger.debug(msg);
 			/* check status first */
@@ -91,8 +94,10 @@ public class VMAgent extends Thread {
 
 				Thread.sleep(defaultWaitPeriod);
 			}
+			vm.getProfiler().mark("bootingTime");
 
 			/* use ping to check if system has been initialized */
+			vm.getProfiler().mark("preparationTime");
 			msg = String.format("Pinging VM#%d...", vm.getId());
 			logger.debug(msg);
 			while (true) {
@@ -146,9 +151,13 @@ public class VMAgent extends Thread {
 
 				Thread.sleep(defaultWaitPeriod);
 			}
+			vm.getProfiler().mark("preparationTime");
 
 			/* VM instance is ready, put it into the resource list */
 			ResourceManager.instance().addVM(vm);
+
+			vm.getProfiler().mark("availableTime");
+			vm.getProfiler().mark("idleTime");
 
 			long preparationTime = System.currentTimeMillis() - startTime;
 			StatisticsManager.instance().addVMPreparationTime(preparationTime);

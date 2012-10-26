@@ -37,12 +37,15 @@ public class StatisticsManager {
 	 */
 	private HashMap<String, Long> systemStatisticsMap;
 
+	private HashMap<Integer, Profiler> vmProfilerMap;
+
 
 	public StatisticsManager() {
 		this.jobStatisticsMap = new HashMap<Integer, StatisticsData>();
 		this.systemPerformanceList = new LinkedList<StatisticsData>();
 		this.systemStatisticsMap = new HashMap<String, Long>();
 		this.vmPreparationTimeList = new LinkedList<Long>();
+		this.vmProfilerMap = new HashMap<Integer, Profiler>();
 
 		this.initializeSystemStatisticsMap();
 	}
@@ -141,6 +144,12 @@ public class StatisticsManager {
 	public void addVMPreparationTime(long time) {
 		synchronized (this.vmPreparationTimeList) {
 			this.vmPreparationTimeList.add(time);
+		}
+	}
+
+	public void addVMProfiler(int id, Profiler profiler) {
+		synchronized (this.vmProfilerMap) {
+			this.vmProfilerMap.put(id, profiler);
 		}
 	}
 
@@ -255,12 +264,41 @@ public class StatisticsManager {
 			writer.write(content);
 		}
 
+		/* detail VM performance */
+		writer.write("\n====================\nDetail VM Performance\n====================\n");
+		writer.write("#id startTime deadTime lifeTime bootingTime preparationTime idleTime busyTime\n");
+		Iterator<Entry<Integer, Profiler>> itr3 = this.vmProfilerMap.entrySet().iterator();
+		while (itr3.hasNext()) {
+			Entry<Integer, Profiler> entry = itr3.next();
+			int id = entry.getKey();
+			Profiler profiler = entry.getValue();
+
+			long startTime = profiler.getMark("startTime");
+			long deadTime = profiler.getMark("deadTime");
+			long lifeTime = deadTime - startTime;
+			long bootingTime = profiler.getStatisticsMap().get("bootingTime");
+			long prepareTime = profiler.getStatisticsMap().get("preparationTime");
+			long idleTime = profiler.getStatisticsMap().get("idleTime");
+			long busyTime = profiler.getStatisticsMap().get("busyTime");
+
+			content = String.format(
+					"%d %d %d %.3f %.3f %.3f %.3f %.3f\n",
+					id, startTime, deadTime,
+					(double)lifeTime / 1000,
+					(double)bootingTime / 1000,
+					(double)prepareTime / 1000,
+					(double)idleTime / 1000,
+					(double)busyTime / 1000);
+
+			writer.write(content);
+		}
+
 		/* system performance over time */
 		writer.write("\n====================\nSystem Performance Over Time\n====================\n");
 		writer.write("#Timestamp #JobsPending #JobsRunning #VMInstances\n");
-		Iterator<StatisticsData> itr3 = systemPerformanceList.iterator();
-		while (itr3.hasNext()) {
-			StatisticsData data = itr3.next();
+		Iterator<StatisticsData> itr4 = systemPerformanceList.iterator();
+		while (itr4.hasNext()) {
+			StatisticsData data = itr4.next();
 			content = String.format("%d %d %d %d\n",
 					data.get("Time"),
 					data.get("JobsPending"),

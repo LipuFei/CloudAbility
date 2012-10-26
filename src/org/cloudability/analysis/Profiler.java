@@ -6,12 +6,12 @@ package org.cloudability.analysis;
 import java.util.HashMap;
 
 /**
- * A profiler for evaluating the job's performance.
+ * A simple profiler for evaluating performance.
  * @author Lipu Fei
  * @version 0.1
  *
  */
-public class JobProfiler {
+public class Profiler {
 
 	private HashMap<String, Long> markMap;
 	private HashMap<String, Long> statisticsMap;
@@ -19,7 +19,7 @@ public class JobProfiler {
 	/**
 	 * Constructor.
 	 */
-	public JobProfiler() {
+	public Profiler() {
 		this.markMap = new HashMap<String, Long>();
 		this.statisticsMap = new HashMap<String, Long>();
 	}

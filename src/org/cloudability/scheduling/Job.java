@@ -11,7 +11,7 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
-import org.cloudability.analysis.JobProfiler;
+import org.cloudability.analysis.Profiler;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.VMInstance;
 import org.koala.internals.SSHHandler;
@@ -36,7 +36,7 @@ public class Job implements Runnable {
 	private Logger logger = Logger.getLogger(Job.class);
 
 	/* every job has a profiler */
-	private JobProfiler jobProfiler = new JobProfiler();
+	private Profiler jobProfiler = new Profiler();
 
 	/* a signal that indicates if this job should stop */
 	private volatile boolean toStop;
@@ -116,7 +116,7 @@ public class Job implements Runnable {
 		return true;
 	}
 
-	public JobProfiler getProfiler() {
+	public Profiler getProfiler() {
 		return this.jobProfiler;
 	}
 

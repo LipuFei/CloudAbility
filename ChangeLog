@@ -212,3 +212,12 @@ Changes:
 2. A so-called "Simple Elastic" provisioning policy has been added. Please
    update the configuration file.
 
+
+2012-10-26  16:35  Lipu Fei
+==================================================
+Changes:
+1. The JobProfiler has been changed to a general profiler called "Profiler".
+2. Each VMInstance has its own profiler now.
+3. The statistics module now collects VMInstance profilers and can generate
+   individual VMInstance profiling results in the final report.
+

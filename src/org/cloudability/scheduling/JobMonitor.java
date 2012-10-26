@@ -6,7 +6,7 @@ package org.cloudability.scheduling;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
-import org.cloudability.analysis.JobProfiler;
+import org.cloudability.analysis.Profiler;
 import org.cloudability.analysis.StatisticsData;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.scheduling.Job.JobStatus;
@@ -105,7 +105,7 @@ public class JobMonitor extends Thread {
 		/* check job status */
 		if (job.getStatus() == JobStatus.FINISHED) {
 			/* store the statistics of the job's performance */
-			JobProfiler profiler = job.getProfiler();
+			Profiler profiler = job.getProfiler();
 			long arrivalTime = profiler.getMark("arrivalTime");
 			long makespan = profiler.getMark("finishTime") - profiler.getMark("arrivalTime");
 			long waitTime = profiler.getMark("startTime") - profiler.getMark("arrivalTime");

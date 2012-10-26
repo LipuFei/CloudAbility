@@ -119,6 +119,10 @@ public class ResourceManager {
 			while (itrVM.hasNext()) {
 				VMInstance vm = itrVM.next();
 				broker.finalizeVM(vm);
+
+				vm.getProfiler().mark("idleTime");
+				vm.getProfiler().mark("deadTime");
+				StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
 			}
 
 			vmAgentList.clear();
@@ -169,7 +173,12 @@ public class ResourceManager {
 						if (vm.getStatus() != VMStatus.RUNNING) {
 							broker.finalizeVM(vm);
 							itr.remove();
+
 							logger.debug("VM removed.");
+
+							vm.getProfiler().mark("idleTime");
+							vm.getProfiler().mark("deadTime");
+							StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
 
 							StatisticsManager.instance().addFinalizedVM();
 						}
@@ -265,7 +274,12 @@ public class ResourceManager {
 
 				logger.debug("VM removed.");
 
+				vm.getProfiler().mark("idleTime");
+				vm.getProfiler().mark("deadTime");
+				StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
+
 				StatisticsManager.instance().addFinalizedVM();
+
 			} catch (BrokerException e) {
 				String msg = String.format("Cannot finalize VM#%d: %s.", vm.getId(), e.getMessage());
 				logger.error(msg);
