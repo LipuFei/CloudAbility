@@ -65,7 +65,7 @@ public class StaticProvisioner extends Provisioner {
 	@Override
 	public void regularCheck() {
 		int currentNumber = ResourceManager.instance().getVMAgentNumber() +
-				ResourceManager.instance().getVMInstanceNumber();
+				ResourceManager.instance().getResourceNumber();
 		int toAllocate = allocationNumber - currentNumber;
 		while (toAllocate-- > 0) {
 			ResourceManager.instance().allocateVM();

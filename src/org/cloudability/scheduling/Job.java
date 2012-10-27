@@ -12,7 +12,8 @@ import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
 import org.cloudability.analysis.Profiler;
-import org.cloudability.analysis.StatisticsManager;
+import org.cloudability.analysis.Recorder;
+import org.cloudability.analysis.StatisticsData;
 import org.cloudability.resource.VMInstance;
 import org.koala.internals.SSHHandler;
 
@@ -35,16 +36,17 @@ public class Job implements Runnable {
 
 	private Logger logger = Logger.getLogger(Job.class);
 
-	/* every job has a profiler */
-	private Profiler jobProfiler = new Profiler();
-
-	/* a signal that indicates if this job should stop */
-	private volatile boolean toStop;
-	private boolean isStopped;
+	/* for profiling */
+	private Profiler profiler = new Profiler();
+	private Recorder recorder = new Recorder();
 
 	/* Statuses of a job */
 	public enum JobStatus {
-		PENDING, RUNNING, FINISHED, FAILED, STOPPED
+		PENDING,
+		RUNNING,
+		FINISHED,
+		FAILED,
+		STOPPED
 	}
 
 	private int id;
@@ -69,9 +71,7 @@ public class Job implements Runnable {
 	 */
 	public Job(int id, HashMap<String, String> parameterMap) {
 		this.arrivalTime = System.currentTimeMillis();
-		this.jobProfiler.mark("arrivalTime");
 
-		this.toStop = false;
 		this.status = JobStatus.PENDING;
 
 		this.id = id;
@@ -80,6 +80,9 @@ public class Job implements Runnable {
 
 		this.waitTime = 0;
 		this.failure = 0;
+
+		/* profiling */
+		this.recorder.record("arrivalTime", this.arrivalTime);
 	}
 
 	/**
@@ -117,14 +120,49 @@ public class Job implements Runnable {
 	}
 
 	public Profiler getProfiler() {
-		return this.jobProfiler;
+		return this.profiler;
 	}
 
-	/**
-	 * Sets the toStop signal.
-	 */
-	public void setToStop() {
-		this.toStop = true;
+	public Recorder getRecorder() {
+		return this.recorder;
+	}
+
+	public StatisticsData summarize() {
+		StatisticsData data = new StatisticsData();
+
+		Long arrivalTime = this.recorder.get("arrivalTime");
+		Long startTime = this.recorder.get("startTime");
+		Long finishTime = this.recorder.get("finishTime");
+
+		data.add("arrivalTime", arrivalTime);
+		data.add("startTime", startTime);
+		data.add("finishTime", finishTime);
+		data.add("failures", new Long(this.failure));
+
+		Long makespan = null;
+		if (finishTime != null) {
+			makespan = finishTime - arrivalTime;
+		}
+		data.add("makespan", makespan);
+
+		Long waitTime = null;
+		if (startTime != null) {
+			waitTime = startTime - arrivalTime;
+		}
+		data.add("waitTime", waitTime);
+
+		Long runningTime = null;
+		if (finishTime != null) {
+			runningTime = finishTime - finishTime;
+		}
+		data.add("runningTime", runningTime);
+
+		data.add("uploadTime", this.profiler.getPeriod("uploadTime"));
+		data.add("tarballExtractionTime", this.profiler.getPeriod("tarballExtractionTime"));
+		data.add("executionTime", this.profiler.getPeriod("executionTime"));
+		data.add("downloadTime", this.profiler.getPeriod("downloadTime"));
+
+		return data;
 	}
 
 	public void setId(int id) {
@@ -161,13 +199,11 @@ public class Job implements Runnable {
 	 */
 	@Override
 	public void run() {
-		jobProfiler.mark("startTime");
+		this.recorder.record("startTime", System.currentTimeMillis());
 
 		String msg = "";
 
 		/* preparations */
-		jobProfiler.mark("preparationTime");
-
 		/* get IP address of the VM instance and the username to login */
 		msg = "Getting VM parameters...";
 		logger.debug(msg);
@@ -187,8 +223,6 @@ public class Job implements Runnable {
 		String outputLocal = parameterMap.get("OUTPUT.LOCAL");
 		String outputRemote = parameterMap.get("OUTPUT.REMOTE");
 
-		jobProfiler.mark("preparationTime");
-
 		try {
 			/* change status to running */
 			msg = String.format("Job#%d has been started...", id);
@@ -198,7 +232,7 @@ public class Job implements Runnable {
 			/*
 			 * STEP #1. upload execution and input files
 			 */
-			jobProfiler.mark("uploadTime");
+			profiler.mark("uploadTime");
 
 			msg = String.format("Job#%d started uploading files...", id);
 			logger.info(msg);
@@ -212,12 +246,12 @@ public class Job implements Runnable {
 			scpClient.put(appLocal, tarballName, RemoteDir, "0644");
 			scpClient.put(inputSrcFiles, inputDesFiles, RemoteDir, "0644");
 
-			jobProfiler.mark("uploadTime");
+			profiler.mark("uploadTime");
 
 			/*
 			 * STEP #2. execute the job
 			 */
-			jobProfiler.mark("tarballExtractionTime");
+			profiler.mark("tarballExtractionTime");
 			/* first uncompress the execution tarball */
 			msg = String.format("JOB#%d started extracting the tarball...", id);
 			logger.info(msg);
@@ -236,20 +270,6 @@ public class Job implements Runnable {
 			session.execCommand(cmd);
 			/* wait until finish */
 			while (true) {
-				/* check stop signal */
-				if (toStop) {
-					outRd.close();
-					errRd.close();
-					session.close();
-
-					msg = String.format("JOB#%d has been stopped.", id);
-					logger.info(msg);
-
-					/* set isStop signal and throw exception */
-					this.isStopped = true;
-					throw new RuntimeException(msg);
-				}
-
 				int bitmask = session.waitForCondition(ChannelCondition.EXIT_STATUS, 1000);
 				if ((bitmask & ChannelCondition.EXIT_STATUS) > 0)
 					break;
@@ -276,10 +296,10 @@ public class Job implements Runnable {
 				throw new RuntimeException(msg);
 			}
 
-			jobProfiler.mark("tarballExtractionTime");
+			profiler.mark("tarballExtractionTime");
 
 			/* execute the job */
-			jobProfiler.mark("executionTime");
+			profiler.mark("executionTime");
 
 			msg = String.format("JOB#%d started execution...", id);
 			logger.info(msg);
@@ -298,20 +318,6 @@ public class Job implements Runnable {
 			session.execCommand(cmd);
 			/* wait until finish */
 			while (true) {
-				/* check stop signal */
-				if (toStop) {
-					outRd.close();
-					errRd.close();
-					session.close();
-
-					msg = String.format("JOB#%d has been stopped.", id);
-					logger.info(msg);
-
-					/* set isStop signal and throw exception */
-					this.isStopped = true;
-					throw new RuntimeException(msg);
-				}
-
 				int bitmask = session.waitForCondition(ChannelCondition.EXIT_STATUS, 1000);
 				if ((bitmask & ChannelCondition.EXIT_STATUS) > 0)
 					break;
@@ -338,10 +344,10 @@ public class Job implements Runnable {
 				throw new RuntimeException(msg);
 			}
 
-			jobProfiler.mark("executionTime");
+			profiler.mark("executionTime");
 
 			/* STEP #3. download output files */
-			jobProfiler.mark("downloadTime");
+			profiler.mark("downloadTime");
 
 			msg = String.format("JOB#%d started downloading the output file...", id);
 			logger.info(msg);
@@ -349,39 +355,35 @@ public class Job implements Runnable {
 			logger.debug(outputLocal);
 			scpClient.get(RemoteDir + "/" + outputRemote, outputLocal);
 
-			jobProfiler.mark("downloadTime");
+			profiler.mark("downloadTime");
 
 			/* finish */
 			msg = String.format("Job#%d is finished.", id);
 			logger.info(msg);
+
+			/* update status */
 			this.status = JobStatus.FINISHED;
 
-			StatisticsManager.instance().addFinishedJob();
-
+			/* profiling */
+			this.recorder.record("finishTime", System.currentTimeMillis());
 		} catch (Exception e) {
 			msg = String.format("JOB#%d exception during execution: %s.",
 					id, e.getMessage());
 			logger.error(msg);
 
-			/* check if it is stopped */
-			if (isStopped) {
-				this.status = JobStatus.STOPPED;
-			}
-			else {
-				this.status = JobStatus.FAILED;
-			}
-
-			/* increase number of failures */
+			/* update status */
+			this.status = JobStatus.FAILED;
 			this.failure++;
 
-			StatisticsManager.instance().addJobsFailure();
-		}
+			/* clear profiler */
+			this.profiler.clear();
+		} finally {
+			/* free the VM instance */
+			this.vmInstance.free();
 
-		jobProfiler.mark("finishTime");
-
-		/* notify all */
-		synchronized (this) {
-			this.notifyAll();
+			/* move itself from running job queue to finished job queue */
+			DataManager.instance().removeRunningJob(this);
+			DataManager.instance().addFinishedJob(this);
 		}
 	}
 

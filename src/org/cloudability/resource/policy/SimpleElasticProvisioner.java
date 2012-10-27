@@ -72,9 +72,9 @@ public class SimpleElasticProvisioner extends Provisioner {
 	@Override
 	public void regularCheck() {
 		int pendingJobNumber = DataManager.instance().getPendingJobQueue().size();
-		int runningJobNumber = DataManager.instance().getJobMonitorNumber();
+		int runningJobNumber = DataManager.instance().getRunningJobNumber();
 		int currentVMNumber = ResourceManager.instance().getVMAgentNumber() +
-				ResourceManager.instance().getVMInstanceNumber();
+				ResourceManager.instance().getResourceNumber();
 
 		/*
 		 * first make sure that total number of VMs should not below minimum
@@ -125,7 +125,12 @@ public class SimpleElasticProvisioner extends Provisioner {
 			}
 
 			if (vmToRemove != null)
-				ResourceManager.instance().finalizeVM(vmToRemove);
+				try {
+					vmToRemove.terminate();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 

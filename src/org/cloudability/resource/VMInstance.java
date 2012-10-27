@@ -4,7 +4,6 @@
 package org.cloudability.resource;
 
 import java.io.ByteArrayInputStream;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,9 +13,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 
-import org.cloudability.DataManager;
 import org.cloudability.adapter.Adapter;
-import org.cloudability.adapter.AdapterException;
 import org.cloudability.analysis.Profiler;
 import org.cloudability.analysis.Recorder;
 
@@ -32,13 +29,17 @@ public class VMInstance {
 	protected Adapter adapter;
 
 	/* for profiling */
-	protected Recorder recorder = new Recorder();
-	protected Profiler profiler = new Profiler();
+	protected volatile Recorder recorder = new Recorder();
+	protected volatile Profiler profiler = new Profiler();
 
 	/* major information */
 	protected int id;
-	protected VMState state;
-	protected String ipAddress;
+	protected volatile VMState state;
+	protected volatile String ipAddress;
+
+	/* some flags */
+	protected volatile boolean ready;
+	protected volatile boolean idle;
 
 	/* number of jobs assigned to this VM */
 	protected volatile int jobsAssigned;
@@ -59,20 +60,14 @@ public class VMInstance {
 		this.updateInfo();
 
 		/* other initializations */
+		this.ready = false;
+		this.idle = false;
 		this.jobsAssigned = 0;
 		this.lastTimeBecomesIdle = System.currentTimeMillis();
 		this.aggregateIdleTime = 0;
 
 		/* profiling */
-		this.getProfiler().mark("startTime");
-	}
-
-	public Recorder getRecorder() {
-		return this.recorder;
-	}
-
-	public Profiler getProfiler() {
-		return this.profiler;
+		this.profiler.mark("startTime");
 	}
 
 	@Override
@@ -83,6 +78,22 @@ public class VMInstance {
 		if (this.id == vm.id) return true;
 
 		return false;
+	}
+
+	public Recorder getRecorder() {
+		return this.recorder;
+	}
+
+	public Profiler getProfiler() {
+		return this.profiler;
+	}
+
+	public boolean isReady() {
+		return this.ready;
+	}
+
+	public boolean isIdle() {
+		return this.idle;
 	}
 
 	public long updateAggregateIdleTime() {
@@ -174,8 +185,9 @@ public class VMInstance {
 	 * assigned to this VM instance.
 	 */
 	public void assign() {
-		/* increases the count */
+		/* increase the count and set the flag */
 		this.jobsAssigned++;
+		this.idle = false;
 
 		/* profiling */
 		this.profiler.mark("idleTime");
@@ -187,8 +199,9 @@ public class VMInstance {
 	 * Frees a job to this VM instance.
 	 */
 	public void free() {
-		/* decreases the count */
+		/* decrease the count and unset the flag */
 		this.jobsAssigned--;
+		this.idle = true;
 
 		/* update time stamp of becoming idle */
 		this.lastTimeBecomesIdle = System.currentTimeMillis();

@@ -3,15 +3,16 @@
  */
 package org.cloudability.scheduling;
 
-import java.lang.Thread.State;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
+import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
+import org.cloudability.scheduling.Job.JobStatus;
 import org.cloudability.scheduling.policy.Allocator;
 import org.cloudability.scheduling.policy.FCFSAllocator;
 
@@ -50,6 +51,7 @@ public class Scheduler implements Runnable {
 			while (true) {
 				/* Scheduler's regular check */
 				this.regularCheck();
+
 				/* Resource manager's regular check */
 				ResourceManager.instance().regularCheck();
 
@@ -83,7 +85,7 @@ public class Scheduler implements Runnable {
 				/* occupy the VM and execute the job on it */
 				vm.assign();
 				job.setVMInstance(vm);
-				createJobMonitor(job);
+				DataManager.instance().executeJob(job);
 			}
 		} catch (InterruptedException e) {
 			msg = String.format("Interrupted while waiting: %s.", e.getMessage());
@@ -103,60 +105,37 @@ public class Scheduler implements Runnable {
 	 * monitoring. 
 	 */
 	private void finialize() {
-		LinkedList<JobMonitor> monitorList = DataManager.instance().getJobMonitorList();
-		synchronized (monitorList) {
-			Iterator<JobMonitor> itr = monitorList.iterator();
-			while (itr.hasNext()) {
-				JobMonitor monitor = itr.next();
-				monitor.setToStop();
-				try {
-					monitor.join();
-				} catch (InterruptedException e) {
-					String msg = String.format("Interrupted while waiting for JobMonitor to stop: %s.", e.getMessage());
-					logger.error(msg);
-				}
-			}
-		}
+		DataManager.cleanup();
 	}
 
 
 	/**
-	 * Regular check. It removes all finished JobMonitors.
+	 * Check finished jobs. Record succeed jobs and deal with failed jobs.
 	 */
 	private void regularCheck() {
-		/* remove all finished JobMonitors */
-		LinkedList<JobMonitor> monitorList = DataManager.instance().getJobMonitorList();
-		synchronized (monitorList) {
-			Iterator<JobMonitor> itr = monitorList.iterator();
+		LinkedList<Job> jobList = DataManager.instance().getFinishedJobQueue();
+		synchronized (jobList) {
+			Iterator<Job> itr = jobList.iterator();
 			while (itr.hasNext()) {
-				JobMonitor monitor = itr.next();
-				if (monitor.getState() == State.TERMINATED) {
-					itr.remove();
-					String msg = "Finished JobMonitor removed.";
-					logger.debug(msg);
+				Job job = itr.next();
+
+				/* record succeeded jobs */
+				if (job.getStatus() == JobStatus.FINISHED) {
+					StatisticsManager.instance().recordJob(job);
 				}
+				/* handle failed jobs */
+				else if (job.getStatus() == JobStatus.FAILED) {
+					DataManager.instance().getPendingJobQueue().addJob(job);
+				}
+				/* unexpected status */
+				else {
+					String msg = "Unexpected job status in finished job queue.";
+					this.logger.warn(msg);
+				}
+
+				itr.remove();
 			}
 		}
-	}
-
-
-	/**
-	 * A Method to create a JobMonitor for a Job in order to execute and
-	 * monitor it.
-	 * @param job The job to be executed and monitored.
-	 */
-	private void createJobMonitor(Job job) {
-		String msg = String.format(
-				"Starting job monitor for JOB#%d on VM#%d.",
-				job.getId(), job.getVMInstance().getId());
-		logger.debug(msg);
-
-		/* create a job monitor thread */
-		JobMonitor jobMonitor = new JobMonitor(job);
-		jobMonitor.start();
-
-		/* add into list */
-		DataManager.instance().addJobMonitor(jobMonitor);
 	}
 
 }

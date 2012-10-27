@@ -9,7 +9,6 @@ import com.trilead.ssh2.Session;
 
 import org.cloudability.DataManager;
 import org.cloudability.adapter.Adapter;
-import org.cloudability.adapter.OneAdapter;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.VMState;
 import org.koala.internals.SSHException;

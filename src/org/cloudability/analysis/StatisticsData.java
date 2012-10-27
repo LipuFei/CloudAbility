@@ -18,11 +18,11 @@ public class StatisticsData {
 		this.dataMap = new HashMap<String, Long>();
 	}
 
-	public void add(String name, long value) {
+	public void add(String name, Long value) {
 		this.dataMap.put(name, value);
 	}
 
-	public long get(String name) {
+	public Long get(String name) {
 		return this.dataMap.get(name);
 	}
 

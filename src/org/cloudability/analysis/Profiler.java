@@ -25,7 +25,12 @@ public class Profiler {
 		this.statisticsMap = new HashMap<String, Long>();
 	}
 
-	public long getMark(String key) {
+	public void clear() {
+		this.markMap.clear();
+		this.statisticsMap.clear();
+	}
+
+	public Long getMark(String key) {
 		return this.markMap.get(key);
 	}
 
@@ -33,7 +38,7 @@ public class Profiler {
 	 * Gets a value from the statistics map with a given key.
 	 * @return The period of the given key if exists, null if not.
 	 */
-	public long getPeriod(String key) {
+	public Long getPeriod(String key) {
 		return this.statisticsMap.get(key);
 	}
 

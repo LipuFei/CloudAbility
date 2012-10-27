@@ -14,6 +14,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
+import org.cloudability.scheduling.Job;
+
 /**
  * Responsible for collecting system performance results and print them to a
  * file.
@@ -28,6 +30,7 @@ public class StatisticsManager {
 
 	/* maintains statistics of all finished jobs */
 	private HashMap<Integer, StatisticsData> jobStatisticsMap;
+	private HashMap<Integer, StatisticsData> unfinishedJobStatisticsMap;
 
 	/* maintains system performance over time */
 	private LinkedList<StatisticsData> systemPerformanceList;
@@ -45,6 +48,7 @@ public class StatisticsManager {
 
 	public StatisticsManager() {
 		this.jobStatisticsMap = new HashMap<Integer, StatisticsData>();
+		this.unfinishedJobStatisticsMap = new HashMap<Integer, StatisticsData>();
 		this.systemPerformanceList = new LinkedList<StatisticsData>();
 		this.systemStatisticsMap = new HashMap<String, Long>();
 		this.vmPreparationTimeList = new LinkedList<Long>();
@@ -75,10 +79,12 @@ public class StatisticsManager {
 		return _instance;
 	}
 
-	public void addJobStatistics(int jobId, StatisticsData data) {
-		synchronized (this.jobStatisticsMap) {
-			this.jobStatisticsMap.put(jobId, data);
-		}
+	public void recordJob(Job job) {
+		this.jobStatisticsMap.put(job.getId(), job.summarize());
+	}
+
+	public void recordUnfinishedJob(Job job) {
+		this.unfinishedJobStatisticsMap.put(job.getId(), job.summarize());
 	}
 
 	public void addSystemStatistics(StatisticsData data) {
@@ -190,7 +196,7 @@ public class StatisticsManager {
 		content += String.format("VM allocation attempts: %d\n", systemStatisticsMap.get("VMAllocationAttempts"));
 		content += String.format("VM allocation failures: %d\n", systemStatisticsMap.get("VMAllocationFailures"));
 
-		long[] vmPreparationTime = createMetric();
+		Long[] vmPreparationTime = createMetric();
 		Iterator<Long> itr1 = this.vmPreparationTimeList.iterator();
 		while (itr1.hasNext()) {
 			updateMetric(vmPreparationTime, itr1.next());
@@ -198,7 +204,7 @@ public class StatisticsManager {
 		if (this.vmPreparationTimeList.size() > 0) {
 			content += String.format(
 					"VM preparation time: %s sec\n",
-					formatMetric(vmPreparationTime, this.vmPreparationTimeList.size()));
+					formatMetric(vmPreparationTime, new Long(this.vmPreparationTimeList.size())));
 		}
 		else {
 			content += "VM preparation time: null\n";
@@ -209,18 +215,17 @@ public class StatisticsManager {
 		/* overall job statistics */
 		writer.write("\n====================\nOverall Job Statistics\n====================\n");
 
-		long[] makespan = createMetric();
-		long[] waitTime = createMetric();
-		long[] runningTime = createMetric();
-		long[] preparationTime = createMetric();
-		long[] uploadTime = createMetric();
-		long[] tarballExtractionTime = createMetric();
-		long[] executionTime = createMetric();
-		long[] downloadTime = createMetric();
+		Long[] makespan = createMetric();
+		Long[] waitTime = createMetric();
+		Long[] runningTime = createMetric();
+		Long[] uploadTime = createMetric();
+		Long[] tarballExtractionTime = createMetric();
+		Long[] executionTime = createMetric();
+		Long[] downloadTime = createMetric();
 
 		long totalNumber = 0;
 
-		Iterator<Entry<Integer, StatisticsData>> itr2 = jobStatisticsMap.entrySet().iterator();
+		Iterator<Entry<Integer, StatisticsData>> itr2 = this.jobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
 			Entry<Integer, StatisticsData> entry = itr2.next();
 			StatisticsData data = entry.getValue();
@@ -228,7 +233,6 @@ public class StatisticsManager {
 			updateMetric(makespan, data.get("makespan"));
 			updateMetric(waitTime, data.get("waitTime"));
 			updateMetric(runningTime, data.get("runningTime"));
-			updateMetric(preparationTime, data.get("preparationTime"));
 			updateMetric(uploadTime, data.get("uploadTime"));
 			updateMetric(tarballExtractionTime, data.get("tarballExtractionTime"));
 			updateMetric(executionTime, data.get("executionTime"));
@@ -237,14 +241,13 @@ public class StatisticsManager {
 			totalNumber++;
 		}
 		if (totalNumber != 0) {
-			content = String.format("makespan=%s sec\n", formatMetric(makespan, totalNumber));
-			content += String.format("waitTime=%s sec\n", formatMetric(waitTime, totalNumber));
-			content += String.format("runningTime=%s sec\n", formatMetric(runningTime, totalNumber));
-			content += String.format("preparationTime=%s sec\n", formatMetric(preparationTime, totalNumber));
-			content += String.format("uploadTime=%s sec\n", formatMetric(uploadTime, totalNumber));
-			content += String.format("tarballExtractionTime=%s sec\n", formatMetric(tarballExtractionTime, totalNumber));
-			content += String.format("executionTime=%s sec\n", formatMetric(executionTime, totalNumber));
-			content += String.format("downloadTime=%s sec\n", formatMetric(downloadTime, totalNumber));
+			content = String.format("makespan = %s sec\n", formatMetric(makespan, totalNumber));
+			content += String.format("waitTime = %s sec\n", formatMetric(waitTime, totalNumber));
+			content += String.format("runningTime = %s sec\n", formatMetric(runningTime, totalNumber));
+			content += String.format("uploadTime = %s sec\n", formatMetric(uploadTime, totalNumber));
+			content += String.format("tarballExtractionTime = %s sec\n", formatMetric(tarballExtractionTime, totalNumber));
+			content += String.format("executionTime = %s sec\n", formatMetric(executionTime, totalNumber));
+			content += String.format("downloadTime = %s sec\n", formatMetric(downloadTime, totalNumber));
 		}
 		else {
 			content = "null\n";
@@ -253,23 +256,40 @@ public class StatisticsManager {
 
 		/* detailed job statistics */
 		writer.write("\n====================\nDetail Job Statistics\n====================\n");
-		writer.write("#jobId arrivalTime makespan waitTime runningTime preparationTime uploadTime tarballExtractionTime executionTime downloadTime\n");
-		itr2 = jobStatisticsMap.entrySet().iterator();
+		writer.write("#jobId arrivalTime failures makespan waitTime runningTime uploadTime tarballExtractionTime executionTime downloadTime\n");
+		itr2 = this.jobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
 			Entry<Integer, StatisticsData> entry = itr2.next();
 			StatisticsData data = entry.getValue();
 
-			content = String.format("%d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\n",
+			content = String.format("%d\t%d\t%d\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n",
 					entry.getKey(),
 					data.get("arrivalTime"),
-					(double)data.get("makespan") / 1000,
-					(double)data.get("waitTime") / 1000,
-					(double)data.get("runningTime") / 1000,
-					(double)data.get("preparationTime") / 1000,
-					(double)data.get("uploadTime") / 1000,
-					(double)data.get("tarballExtractionTime") / 1000,
-					(double)data.get("executionTime") / 1000,
-					(double)data.get("downloadTime") / 1000
+					data.get("failures"),
+					msToSec(data.get("makespan")),
+					msToSec(data.get("waitTime")),
+					msToSec(data.get("runningTime")),
+					msToSec(data.get("uploadTime")),
+					msToSec(data.get("tarballExtractionTime")),
+					msToSec(data.get("executionTime")),
+					msToSec(data.get("downloadTime"))
+			);
+
+			writer.write(content);
+		}
+
+		/* unfinished job statistics */
+		writer.write("\n====================\nUnfinished Job Statistics\n====================\n");
+		writer.write("#jobId arrivalTime failures\n");
+		itr2 = this.unfinishedJobStatisticsMap.entrySet().iterator();
+		while (itr2.hasNext()) {
+			Entry<Integer, StatisticsData> entry = itr2.next();
+			StatisticsData data = entry.getValue();
+
+			content = String.format("%d\t%d\t%d\n",
+					entry.getKey(),
+					data.get("arrivalTime"),
+					data.get("failures")
 			);
 
 			writer.write(content);
@@ -284,22 +304,22 @@ public class StatisticsManager {
 			int id = entry.getKey();
 			Profiler profiler = entry.getValue();
 
-			long startTime = profiler.getMark("startTime");
-			long deadTime = profiler.getMark("deadTime");
-			long lifeTime = deadTime - startTime;
-			long bootingTime = profiler.getPeriod("bootingTime");
-			long prepareTime = profiler.getPeriod("preparationTime");
-			long idleTime = profiler.getPeriod("idleTime");
-			long busyTime = profiler.getPeriod("busyTime");
+			Long startTime = profiler.getMark("startTime");
+			Long deadTime = profiler.getMark("deadTime");
+			Long lifeTime = deadTime - startTime;
+			Long bootingTime = profiler.getPeriod("bootingTime");
+			Long prepareTime = profiler.getPeriod("preparationTime");
+			Long idleTime = profiler.getPeriod("idleTime");
+			Long busyTime = profiler.getPeriod("busyTime");
 
 			content = String.format(
-					"%d %d %d %.3f %.3f %.3f %.3f %.3f\n",
+					"%d\t%d\t%d\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n",
 					id, startTime, deadTime,
-					(double)lifeTime / 1000,
-					(double)bootingTime / 1000,
-					(double)prepareTime / 1000,
-					(double)idleTime / 1000,
-					(double)busyTime / 1000);
+					msToSec(lifeTime),
+					msToSec(bootingTime),
+					msToSec(prepareTime),
+					msToSec(idleTime),
+					msToSec(busyTime));
 
 			writer.write(content);
 		}
@@ -324,25 +344,35 @@ public class StatisticsManager {
 		writer.close();
 	}
 
-	private long[] createMetric() {
-		long[] metric = new long[3];
+	private Double msToSec(Long ms) {
+		Double sec = null;
+		if (ms != null) {
+			sec = (double) ms / 1000;
+		}
+		return sec;
+	}
+
+	private Long[] createMetric() {
+		Long[] metric = new Long[3];
 		metric[0] = Long.MAX_VALUE;
-		metric[1] = 0;
+		metric[1] = 0L;
 		metric[2] = Long.MIN_VALUE;
 		return metric;
 	}
 
-	private void updateMetric(long[] metric, long value) {
-		metric[0] = metric[0] < value ? metric[0] : value;
-		metric[1] += value;
-		metric[2] = metric[2] > value ? metric[2] : value;
+	private void updateMetric(Long[] metric, Long value) {
+		if (value != null) {
+			metric[0] = metric[0] < value ? metric[0] : value;
+			metric[1] += value;
+			metric[2] = metric[2] > value ? metric[2] : value;
+		}
 	}
 
-	private String formatMetric(long[] metric, long total) {
+	private String formatMetric(Long[] metric, Long total) {
 		return String.format("[%.3f %.3f %.3f]",
-				(double)metric[0] / 1000,
-				(double)metric[1] / total / 1000,
-				(double)metric[2] / 1000);
+				msToSec(metric[0]),
+				msToSec(metric[1]) / total,
+				msToSec(metric[2]));
 	}
 
 }

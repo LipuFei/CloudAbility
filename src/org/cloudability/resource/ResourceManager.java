@@ -3,7 +3,6 @@
  */
 package org.cloudability.resource;
 
-import java.lang.Thread.State;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -14,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
+import org.cloudability.analysis.Recorder;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.VMState;
 import org.cloudability.resource.policy.Provisioner;
@@ -47,6 +47,14 @@ public class ResourceManager {
 
 
 	/**
+	 * Gets the instance.
+	 * @return the ResourceManager instance.
+	 */
+	public static ResourceManager instance() {
+		return _instance;
+	}
+
+	/**
 	 * Constructor.
 	 * @throws CloudConfigException
 	 */
@@ -58,7 +66,6 @@ public class ResourceManager {
 		this.vmAgentExecutorService = Executors.newScheduledThreadPool(5);
 		this.vmAgentNumber = 0;
 	}
-
 
 	/**
 	 * Initialization.
@@ -88,16 +95,6 @@ public class ResourceManager {
 		String info = "Resource Manager has been initialized.";
 		_instance.logger.info(info);
 	}
-
-
-	/**
-	 * Gets the instance.
-	 * @return the ResourceManager instance.
-	 */
-	public static ResourceManager instance() {
-		return _instance;
-	}
-
 
 	/**
 	 * Finalizes the resource manager.
@@ -147,17 +144,13 @@ public class ResourceManager {
 					VMInstance vm = itr.next();
 
 					synchronized (vm) {
-						/* skip those who have jobs on them */
-						if (vm.getJobsAssigned() > 0) continue;
-	
-						if (vm.getStatus() != VMState.RUNNING) {
+						if (vm.isIdle() && vm.getStatus() != VMState.RUNNING) {
 							vm.terminate();
 							itr.remove();
 
 							logger.debug("VM removed.");
 
 							StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
-
 							StatisticsManager.instance().addFinalizedVM();
 						}
 					}
@@ -176,15 +169,24 @@ public class ResourceManager {
 
 
 	/**
-	 * Gets the number of VMInstances in the resource pool.
-	 * @return The number of VMInstances in the resource pool.
+	 * The public interface for allocating a VM instance. It starts a VM Agent
+	 * which will allocate and prepare a VM instance until it is ready to go.
 	 */
-	public int getVMInstanceNumber() {
-		synchronized (this.vmList) {
-			return this.vmList.size();
-		}
+	public synchronized void allocateVM() {
+		this.vmAgentNumber++;
+		this.vmAgentExecutorService.execute(new VMAgent());
+
+		/* profiling */
+		StatisticsManager.instance().addVMAllocationAttempts();
 	}
 
+	/**
+	 * This method is intended for the VMAgents to update the information when
+	 * they finishes or fails.
+	 */
+	public void reduceVMAgentNumber() {
+		this.vmAgentNumber--;
+	}
 
 	/**
 	 * Gets the number of VMAgents running.
@@ -196,33 +198,9 @@ public class ResourceManager {
 
 
 	/**
-	 * Gets the list of VM instances.
-	 * @return The list of VM instances
-	 */
-	public LinkedList<VMInstance> getVMList() {
-		return this.vmList;
-	}
-
-
-	/**
-	 * The public interface for allocating a VM instance. It starts a VM Agent
-	 * which will allocate and prepare a VM instance until it is ready to go.
-	 */
-	public synchronized void allocateVM() {
-		this.vmAgentNumber++;
-		this.vmAgentExecutorService.execute(new VMAgent());
-
-		StatisticsManager.instance().addVMAllocationAttempts();
-	}
-
-	public void reduceVMAgentNumber() {
-		this.vmAgentNumber--;
-	}
-
-
-	/**
-	 * Adds a VM instance to the resource list.
-	 * @param vmInstance The VM instance to be added.
+	 * Public interface for adding a VM instance into the resource list. It
+	 * method to let VMAgents add the prepared VMs into the resource list.
+	 * @param vm The VM instance to be added.
 	 */
 	public void addVM(VMInstance vm) {
 		synchronized (vmList) {
@@ -237,40 +215,31 @@ public class ResourceManager {
 		StatisticsManager.instance().addAllocatedVM();
 	}
 
-
 	/**
-	 * Finalizes a VM instance and remove it from the resource list.
-	 * @param vmInstance The VM instance to be finalized and removed.
-	 */
-	public void finalizeVM(VMInstance vm) {
-		synchronized (vmList) {
-			try {
-				vm.terminate();
-				vmList.remove(vm);
-
-				logger.debug("VM removed.");
-
-				vm.getProfiler().mark("idleTime");
-				vm.getProfiler().mark("deadTime");
-				StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
-
-				StatisticsManager.instance().addFinalizedVM();
-
-			} catch (Exception e) {
-				String msg = String.format("Cannot finalize VM#%d: %s.", vm.getId(), e.getMessage());
-				logger.error(msg);
-			}
-		}
-	}
-
-
-	/**
-	 * Removes a VM instance from the resource list.
-	 * @param vmInstance The VM instance to be removed.
+	 * Public interface for removing a VM instance from the resource list.
+	 * @param vm The VM instance to be removed.
 	 */
 	public void removeVM(VMInstance vm) {
 		synchronized (vmList) {
 			vmList.remove(vm);
+		}
+	}
+
+	/**
+	 * Gets the list of VM instances.
+	 * @return The list of VM instances.
+	 */
+	public LinkedList<VMInstance> getVMList() {
+		return this.vmList;
+	}
+
+	/**
+	 * Gets the number of VM instances in the resource list.
+	 * @return The number of VM instances in the resource list.
+	 */
+	public int getResourceNumber() {
+		synchronized (this.vmList) {
+			return this.vmList.size();
 		}
 	}
 

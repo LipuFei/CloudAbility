@@ -250,3 +250,17 @@ Known Bugs:
 1. There is no NullPointer check is the statistics module, so some metric may
    not exist (such as "busyTime" for VMs) and this will cause the saving to file
    procedure raise an expection.
+
+
+2012-10-27  18:38  Lipu Fei
+==================================================
+Fixes:
+1. Fixed the Null pointer bug in Statistics module.
+
+Changes:
+1. JobMonitors are abandoned. The system overhead is much lower than before.
+2. Statistics module now also collects unfinished job's data when shutting down.
+
+Todos:
+1. Improve log4j. Create configuration file. Output logs into seperate files:
+   One for system, and each job should have a log file., etc.

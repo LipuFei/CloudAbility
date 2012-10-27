@@ -47,7 +47,7 @@ public class Recorder {
 	 * @param name The name of the value to retrieve.
 	 * @return The value if present, null if not.
 	 */
-	public long retrieve(String name) {
+	public Long get(String name) {
 		return this.recordMap.get(name);
 	}
 

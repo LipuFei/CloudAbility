@@ -6,6 +6,9 @@ package org.cloudability;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -13,7 +16,7 @@ import org.cloudability.analysis.StatisticsData;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.scheduling.Job;
-import org.cloudability.scheduling.JobMonitor;
+import org.cloudability.scheduling.Job.JobStatus;
 import org.cloudability.scheduling.JobQueue;
 import org.cloudability.util.CloudConfig;
 import org.cloudability.util.CloudConfigException;
@@ -36,12 +39,12 @@ public class DataManager {
 	private volatile HashMap<String, String> configMap;
 
 	/* some nasty stuffs */
-	private LinkedList<JobMonitor> jobMonitorList;
+	private ExecutorService jobExecutorService;
 
 	/* three job queues */
 	private JobQueue pendingJobQueue;
-	private JobQueue runningJobQueue;
-	private JobQueue finishedJobQueue;
+	private LinkedList<Job> runningJobQueue = new LinkedList<Job>();
+	private LinkedList<Job> finishedJobQueue = new LinkedList<Job>();
 
 	/**
 	 * Constructor.
@@ -51,11 +54,9 @@ public class DataManager {
 		/* initialize the configuration map */
 		this.configMap = CloudConfig.parseFile(configFilePath);
 
-		this.jobMonitorList = new LinkedList<JobMonitor>();
+		this.jobExecutorService = Executors.newScheduledThreadPool(10);
 
 		this.pendingJobQueue = new JobQueue();
-		this.runningJobQueue = new JobQueue();
-		this.finishedJobQueue = new JobQueue();
 	}
 
 	/**
@@ -66,6 +67,42 @@ public class DataManager {
 	public static void initialize(String configFilePath)
 				throws CloudConfigException {
 		_instance = new DataManager(configFilePath);
+	}
+
+	public static void cleanup() {
+		_instance.jobExecutorService.shutdownNow();
+		try {
+			_instance.jobExecutorService.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			String msg = String.format("Interrupted while waitting for jobs: %s.", e.getMessage());
+			_instance.logger.error(msg);
+		}
+
+		/* record unfinished jobs */
+		Iterator<Job> itr = _instance.pendingJobQueue.getInstance().iterator();
+		while (itr.hasNext()) {
+			Job job = itr.next();
+			StatisticsManager.instance().recordUnfinishedJob(job);
+			itr.remove();
+		}
+		itr = _instance.runningJobQueue.iterator();
+		while (itr.hasNext()) {
+			Job job = itr.next();
+			if (job.getStatus() == JobStatus.FINISHED)
+				StatisticsManager.instance().recordJob(job);
+			else
+				StatisticsManager.instance().recordUnfinishedJob(job);
+			itr.remove();
+		}
+		itr = _instance.finishedJobQueue.iterator();
+		while (itr.hasNext()) {
+			Job job = itr.next();
+			if (job.getStatus() == JobStatus.FINISHED)
+				StatisticsManager.instance().recordJob(job);
+			else
+				StatisticsManager.instance().recordUnfinishedJob(job);
+			itr.remove();
+		}
 	}
 
 	/**
@@ -84,27 +121,55 @@ public class DataManager {
 		return this.pendingJobQueue;
 	}
 
-	public JobQueue getRunningJobQueue() {
-		return this.runningJobQueue;
-	}
 
-	public JobQueue getFinishedJobQueue() {
-		return this.finishedJobQueue;
-	}
-
-	public LinkedList<JobMonitor> getJobMonitorList() {
-		return this.jobMonitorList;
-	}
-
-	public int getJobMonitorNumber() {
-		synchronized (this.jobMonitorList) {
-			return this.jobMonitorList.size();
+	public LinkedList<Job> getRunningJobQueue() {
+		synchronized (this.runningJobQueue) {
+			return this.runningJobQueue;
 		}
 	}
 
-	public void addJobMonitor(JobMonitor jobMonitor) {
-		synchronized (this.jobMonitorList) {
-			this.jobMonitorList.add(jobMonitor);
+	public int getRunningJobNumber() {
+		synchronized (this.runningJobQueue) {
+			return this.runningJobQueue.size();
+		}
+	}
+
+	public void executeJob(Job job) {
+		/* execute this job and add it into the running job queue */
+		this.jobExecutorService.execute(job);
+		synchronized (this.runningJobQueue) {
+			this.runningJobQueue.add(job);
+		}
+	}
+
+	public void removeRunningJob(Job job) {
+		synchronized (this.runningJobQueue) {
+			this.runningJobQueue.remove(job);
+		}
+	}
+
+
+	public LinkedList<Job> getFinishedJobQueue() {
+		synchronized (this.finishedJobQueue) {
+			return this.finishedJobQueue;
+		}
+	}
+
+	public int getFinishedJobNumber() {
+		synchronized (this.finishedJobQueue) {
+			return this.finishedJobQueue.size();
+		}
+	}
+
+	public void addFinishedJob(Job job) {
+		synchronized (this.finishedJobQueue) {
+			this.finishedJobQueue.add(job);
+		}
+	}
+
+	public void removeFinishedJob(Job job) {
+		synchronized (this.finishedJobQueue) {
+			this.finishedJobQueue.remove(job);
 		}
 	}
 
@@ -114,8 +179,8 @@ public class DataManager {
 	public void updateSystemStatus() {
 		long time = System.currentTimeMillis();
 		int pendingJobs = this.getPendingJobQueue().size();
-		int runningJobs = this.getJobMonitorNumber();
-		int vms = ResourceManager.instance().getVMInstanceNumber();
+		int runningJobs = this.getRunningJobNumber();
+		int vms = ResourceManager.instance().getResourceNumber();
 		int vmAgents = ResourceManager.instance().getVMAgentNumber();
 
 		StatisticsManager.instance().updateMaximumExistingVMs(vms);
@@ -146,9 +211,9 @@ public class DataManager {
 		/* save to statistics manager */
 		StatisticsData data = new StatisticsData();
 		data.add("Time", time);
-		data.add("JobsPending", pendingJobs);
-		data.add("JobsRunning", runningJobs);
-		data.add("VMInstances", vms);
+		data.add("JobsPending", new Long(pendingJobs));
+		data.add("JobsRunning", new Long(runningJobs));
+		data.add("VMInstances", new Long(vms));
 		StatisticsManager.instance().addSystemStatistics(data);
 	}
 
