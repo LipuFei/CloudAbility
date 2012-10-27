@@ -4,10 +4,14 @@
 package org.cloudability.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Scanner;
+
+import org.apache.log4j.Logger;
 
 /**
  * It parses cloud configuration file and creates a corresponding hash map.
@@ -21,6 +25,13 @@ import java.util.HashMap;
  *
  */
 public class CloudConfig {
+
+	private final static Logger logger;
+
+	/* initialize the logger */
+	static {
+		logger = Logger.getLogger(CloudConfig.class);
+	}
 
 	/**
 	 * Parse the configuration file.
@@ -76,6 +87,10 @@ public class CloudConfig {
 			}
 
 			reader.close();
+
+			/* some other things */
+			readVMTemplateFiles(configMap);
+
 		} catch (FileNotFoundException e) {
 			/* log and throw exception */
 			String error = "Cloud config file not found: " + filePath;
@@ -87,6 +102,26 @@ public class CloudConfig {
 		}
 
 		return configMap;
+	}
+
+	/**
+	 * Reads the content from VM template files, and set the values to be the
+	 * template contents.
+	 */
+	private static void readVMTemplateFiles(HashMap<String, String> configMap) {
+		String templatePath = configMap.get("ONE.VM_TEMPLATE");
+		/* read VM template file */
+		Scanner scanner = null;
+		try {
+			scanner = new Scanner(new File(templatePath));
+		} catch (FileNotFoundException e) {
+			/* log and throw exception. */
+			String msg = "VM template file not found: " + templatePath + ".";
+			logger.error(msg);
+		}
+		String templateContent = scanner.useDelimiter("\\Z").next();
+		scanner.close();
+		configMap.put("ONE.VM_TEMPLATE", templateContent);
 	}
 
 }

@@ -81,7 +81,7 @@ public class Scheduler implements Runnable {
 				}
 
 				/* occupy the VM and execute the job on it */
-				vm.occupy();
+				vm.assign();
 				job.setVMInstance(vm);
 				createJobMonitor(job);
 			}

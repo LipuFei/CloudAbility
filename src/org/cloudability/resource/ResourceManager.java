@@ -15,12 +15,10 @@ import org.apache.log4j.Logger;
 
 import org.cloudability.DataManager;
 import org.cloudability.analysis.StatisticsManager;
-import org.cloudability.broker.CloudBroker;
-import org.cloudability.resource.VMInstance.VMStatus;
+import org.cloudability.resource.VMState;
 import org.cloudability.resource.policy.Provisioner;
 import org.cloudability.resource.policy.SimpleElasticProvisioner;
 import org.cloudability.resource.policy.StaticProvisioner;
-import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
 
 /**
@@ -115,14 +113,10 @@ public class ResourceManager {
 			/* release all VMs */
 			msg = "Releasing all VM instances...";
 			_instance.logger.info(msg);
-			CloudBroker broker = CloudBroker.createBroker("ONE");
 			Iterator<VMInstance> itrVM = _instance.vmList.iterator();
 			while (itrVM.hasNext()) {
 				VMInstance vm = itrVM.next();
-				broker.finalizeVM(vm);
-
-				vm.getProfiler().mark("idleTime");
-				vm.getProfiler().mark("deadTime");
+				vm.terminate();
 				StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
 			}
 
@@ -132,7 +126,7 @@ public class ResourceManager {
 					"Provisioner thread interrupted while joining: %s.",
 					e.getMessage());
 			_instance.logger.error(msg);
-		} catch (BrokerException e) {
+		} catch (Exception e) {
 			String msg = String.format("Unable to release VM instances: %s.",
 					e.getMessage());
 			_instance.logger.error(msg);
@@ -148,7 +142,6 @@ public class ResourceManager {
 		/* update VM status and remove unusable VMs */
 		synchronized (vmList) {
 			try {
-				CloudBroker broker = CloudBroker.createBroker("ONE");
 				Iterator<VMInstance> itr = vmList.iterator();
 				while (itr.hasNext()) {
 					VMInstance vm = itr.next();
@@ -157,22 +150,19 @@ public class ResourceManager {
 						/* skip those who have jobs on them */
 						if (vm.getJobsAssigned() > 0) continue;
 	
-						broker.updateInfo(vm);
-						if (vm.getStatus() != VMStatus.RUNNING) {
-							broker.finalizeVM(vm);
+						if (vm.getStatus() != VMState.RUNNING) {
+							vm.terminate();
 							itr.remove();
 
 							logger.debug("VM removed.");
 
-							vm.getProfiler().mark("idleTime");
-							vm.getProfiler().mark("deadTime");
 							StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
 
 							StatisticsManager.instance().addFinalizedVM();
 						}
 					}
 				}
-			} catch (BrokerException e) {
+			} catch (Exception e) {
 				String msg = String.format("Error during regular check: %s", e.getMessage());
 				logger.error(msg);
 			}
@@ -255,8 +245,7 @@ public class ResourceManager {
 	public void finalizeVM(VMInstance vm) {
 		synchronized (vmList) {
 			try {
-				CloudBroker broker = CloudBroker.createBroker("ONE");
-				broker.finalizeVM(vm);
+				vm.terminate();
 				vmList.remove(vm);
 
 				logger.debug("VM removed.");
@@ -267,7 +256,7 @@ public class ResourceManager {
 
 				StatisticsManager.instance().addFinalizedVM();
 
-			} catch (BrokerException e) {
+			} catch (Exception e) {
 				String msg = String.format("Cannot finalize VM#%d: %s.", vm.getId(), e.getMessage());
 				logger.error(msg);
 			}

@@ -16,20 +16,13 @@ public class Profiler {
 	private HashMap<String, Long> markMap;
 	private HashMap<String, Long> statisticsMap;
 
+
 	/**
 	 * Constructor.
 	 */
 	public Profiler() {
 		this.markMap = new HashMap<String, Long>();
 		this.statisticsMap = new HashMap<String, Long>();
-	}
-
-	/**
-	 * Gets the statistics map.
-	 * @return The statistics map.
-	 */
-	public HashMap<String, Long> getStatisticsMap() {
-		return this.statisticsMap;
 	}
 
 	public long getMark(String key) {

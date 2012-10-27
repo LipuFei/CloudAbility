@@ -8,10 +8,10 @@ import org.apache.log4j.Logger;
 import com.trilead.ssh2.Session;
 
 import org.cloudability.DataManager;
+import org.cloudability.adapter.Adapter;
+import org.cloudability.adapter.OneAdapter;
 import org.cloudability.analysis.StatisticsManager;
-import org.cloudability.broker.CloudBroker;
-import org.cloudability.resource.VMInstance.VMStatus;
-import org.cloudability.util.BrokerException;
+import org.cloudability.resource.VMState;
 import org.koala.internals.SSHException;
 import org.koala.internals.SSHHandler;
 
@@ -43,25 +43,22 @@ public class VMAgent implements Runnable {
 		VMInstance vm = null;
 
 		try {
-			/* allocate a VM instance */
-			CloudBroker borker = CloudBroker.createBroker("ONE");
-			vm = borker.allocateVM();
-
-			vm.getProfiler().mark("startTime");
+			/* create an adapter and allocates VM instance */
+			Adapter adapter = Adapter.createAdapter("ONE");
+			vm = new VMInstance(adapter);
 
 			/* wait for the VM instance to be RUNNING */
 			vm.getProfiler().mark("bootingTime");
 			msg = String.format("Agent is waiting for VM#%d to be RUNNING...", vm.getId());
 			logger.debug(msg);
 			/* check status first */
-			if (vm.getStatus() == VMStatus.SHUTDOWN || vm.getStatus() == VMStatus.UNKNOWN) {
+			if (vm.getStatus() == VMState.SHUTDOWN || vm.getStatus() == VMState.UNKNOWN) {
 				msg = String.format("VM#%d status is invalid.", vm.getId());
 				throw new Exception(msg);
 			}
 			/* wait until it it running */
-			CloudBroker broker = CloudBroker.createBroker("ONE");
-			while (vm.getStatus() != VMStatus.RUNNING) {
-				broker.updateInfo(vm);
+			while (vm.getStatus() != VMState.RUNNING) {
+				vm.updateInfo();
 
 				/* check time out */
 				if (System.currentTimeMillis() - startTime > defaultTimeout) {
@@ -133,8 +130,7 @@ public class VMAgent implements Runnable {
 					msg = String.format("VM#%d preparation failed: %s", vm.getId(), e.getMessage());
 					logger.error(msg);
 					/* remove this VM instance */
-					CloudBroker broker = CloudBroker.createBroker("ONE");
-					broker.finalizeVM(vm);
+					vm.terminate();
 					msg = String.format("VM#%d has been finalized.", vm.getId());
 					logger.info(msg);
 				}
@@ -142,7 +138,7 @@ public class VMAgent implements Runnable {
 					msg = String.format("VM#UNKNOWN preparation failed: %s", e.getMessage());
 					logger.error(msg);
 				}
-			} catch (BrokerException e1) {
+			} catch (Exception e1) {
 				msg = String.format("Failed to finalize VM#%d: %s", vm.getId(), e1.getMessage());
 				logger.error(msg);
 			}

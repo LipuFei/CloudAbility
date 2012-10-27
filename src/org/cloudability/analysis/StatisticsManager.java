@@ -287,10 +287,10 @@ public class StatisticsManager {
 			long startTime = profiler.getMark("startTime");
 			long deadTime = profiler.getMark("deadTime");
 			long lifeTime = deadTime - startTime;
-			long bootingTime = profiler.getStatisticsMap().get("bootingTime");
-			long prepareTime = profiler.getStatisticsMap().get("preparationTime");
-			long idleTime = profiler.getStatisticsMap().get("idleTime");
-			long busyTime = profiler.getStatisticsMap().get("busyTime");
+			long bootingTime = profiler.getPeriod("bootingTime");
+			long prepareTime = profiler.getPeriod("preparationTime");
+			long idleTime = profiler.getPeriod("idleTime");
+			long busyTime = profiler.getPeriod("busyTime");
 
 			content = String.format(
 					"%d %d %d %.3f %.3f %.3f %.3f %.3f\n",

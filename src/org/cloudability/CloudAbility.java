@@ -8,13 +8,11 @@ import java.util.HashMap;
 
 import org.apache.log4j.BasicConfigurator;
 
-import org.cloudability.broker.CloudBroker;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.Job;
 import org.cloudability.scheduling.Scheduler;
 import org.cloudability.server.ClientRequestListener;
-import org.cloudability.util.BrokerException;
 import org.cloudability.util.CloudConfigException;
 
 /**
@@ -37,11 +35,10 @@ public class CloudAbility {
 
 	/**
 	 * @param args
-	 * @throws BrokerException
 	 * @throws InterruptedException
 	 * @throws IOException 
 	 */
-	public static void main(String[] args) throws BrokerException, InterruptedException, IOException {
+	public static void main(String[] args) throws InterruptedException, IOException {
 		BasicConfigurator.configure();
 
 		/* common initialization */

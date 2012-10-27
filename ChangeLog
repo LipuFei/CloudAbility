@@ -234,3 +234,19 @@ Changes:
 3. The shutdown hook has been improved.
 4. Statistics data file now prints the currenly date and time.
 
+
+2012-10-27  15:50  Lipu Fei
+==================================================
+Changes:
+1. A new profiling tool "Recorder" added.
+2. VMState has been moved out from VMInstance as an independent enum type.
+3. CloudBroker and XmlRpcBroker has been abandoned. The cloud manipulation
+   functions are now simplified and encapusulated in Apdaters.
+4. The VMInstance has been changed, it is no longer the broker's (now, adapter)
+   job to create, update, or terminate a VM instance. A VMInstance is
+   responsible to do these things itself.
+
+Known Bugs:
+1. There is no NullPointer check is the statistics module, so some metric may
+   not exist (such as "busyTime" for VMs) and this will cause the saving to file
+   procedure raise an expection.
