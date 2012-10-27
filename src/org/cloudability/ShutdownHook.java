@@ -8,6 +8,8 @@ import java.io.IOException;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
 
+import org.apache.log4j.Logger;
+
 /**
  * The shutdown hook. Finalizes everything.
  * @author Lipu Fei
@@ -16,41 +18,43 @@ import org.cloudability.resource.ResourceManager;
  */
 public class ShutdownHook implements Runnable {
 
-	public ShutdownHook() {
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
+		Logger logger = Logger.getLogger(ShutdownHook.class);
 		/* stop listener */
-		CloudAbility.listenerThread.stopListening();
+		logger.info("Stopping listener...");
+		CloudAbility.listenerThread.setToStop();
 		try {
 			CloudAbility.listenerThread.join();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (InterruptedException e) {
+			String msg = String.format("Interrupted while waiting for Listener to stop: %s.", e.getMessage());
+			logger.info(msg);
 		}
 
 		/* stop scheduler */
-		CloudAbility.schedulerThread.setToStop();
+		logger.info("Stopping scheduler...");
+		CloudAbility.schedulerThread.interrupt();
 		try {
 			CloudAbility.schedulerThread.join();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (InterruptedException e) {
+			String msg = String.format("Interrupted while waiting for Scheduler to stop: %s.", e.getMessage());
+			logger.info(msg);
 		}
 
 		/* finalize resource manager */
-		ResourceManager.instance().finalize();
+		logger.info("Finalizing resource manager...");
+		ResourceManager.cleanup();
 
 		/* save statistics */
+		logger.info("Saving statistics...");
 		try {
 			StatisticsManager.instance().saveToFile("statistics.txt");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String msg = String.format("IO Exception while saving statistics: %s.", e.getMessage());
+			logger.info(msg);
 		}
 	}
 

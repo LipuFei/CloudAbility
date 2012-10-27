@@ -225,3 +225,12 @@ Todos:
 1. VMInstance management and profiling modules are in a total mass right now.
    They must be redesigned later.
 
+
+2012-10-27  14:09  Lipu Fei
+==================================================
+Changes:
+1. The multi-threading mechanism for handling client requests has been changed.
+2. The multi-threading mechanism for handling VMAgents has been changed.
+3. The shutdown hook has been improved.
+4. Statistics data file now prints the currenly date and time.
+

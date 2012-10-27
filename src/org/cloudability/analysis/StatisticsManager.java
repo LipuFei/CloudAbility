@@ -6,6 +6,9 @@ package org.cloudability.analysis;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -164,7 +167,15 @@ public class StatisticsManager {
 
 		String content = "";
 
-		writer.write("====================\nStatistics\n====================\n");
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+		content = String.format(
+				"Statistics %s\n",
+				dateFormat.format(cal.getTime())
+		);
+		writer.write("====================\n");
+		writer.write(content);
+		writer.write("====================\n");
 
 		/* system statistics */
 		writer.write("\n====================\nSystem Statistics\n====================\n");

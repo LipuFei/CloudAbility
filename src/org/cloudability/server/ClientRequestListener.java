@@ -3,8 +3,9 @@
  */
 package org.cloudability.server;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -27,10 +28,11 @@ public class ClientRequestListener extends Thread {
 
 	private Logger logger;
 
-	private LinkedList<Thread> threadPool;
+	private volatile boolean toStop;
+
 	private int port;
 	private ServerSocketChannel serverChannel;
-	private volatile boolean toStop;
+	private ExecutorService executorService;
 
 	/**
 	 * Constructor.
@@ -38,19 +40,15 @@ public class ClientRequestListener extends Thread {
 	 */
 	public ClientRequestListener(int port) {
 		super();
-
 		this.logger = Logger.getLogger(ClientRequestListener.class);
+		this.toStop = false;
 
-		this.threadPool = new LinkedList<Thread>();
 		this.port = port;
 		this.serverChannel = null;
-		this.toStop = false;
+		this.executorService = Executors.newCachedThreadPool();
 	}
 
-	/**
-	 * This method is used to trigger the stop flag.
-	 */
-	public void stopListening() {
+	public void setToStop() {
 		this.toStop = true;
 	}
 
@@ -74,10 +72,7 @@ public class ClientRequestListener extends Thread {
 			this.serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
 			/* start the loop */
-			while (true) {
-				/* check stop signal */
-				if (this.toStop) break;
-
+			while (!this.toStop) {
 				/* continue if no incoming connection */
 				if (selector.select(blockingPeriod) == 0)
 					continue;
@@ -89,41 +84,42 @@ public class ClientRequestListener extends Thread {
 
 				msg = "Incoming connection accepted, creating a thread.";
 				logger.debug(msg);
-				Thread thread = new Thread(new ClientRequestHandler(channel));
-				this.threadPool.add(thread);
-				thread.start();
+				this.executorService.execute(new ClientRequestHandler(channel));
 
 				/* recreate a selector */
 				selector.close();
 				selector = Selector.open();
 				this.serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 			}
-
-			msg = "Finalizing Client Request Listener.";
+		} catch (IOException e) {
+			String msg = "IO Exception occurred: " + e.getMessage();
+			logger.error(msg);
+		} finally {
+			/* finalization */
+			String msg = "Finalizing ClientRequestListener...";
 			logger.info(msg);
 
 			/* close channel */
-			selector.close();
-			this.serverChannel.close();
+			try {
+				this.serverChannel.close();
+			} catch (IOException e) {
+				msg = "IO Exception while closing the server channel: " + e.getMessage();
+				logger.error(msg);
+			}
 
 			/* cleanup threads */
-			msg = "Cleanning up threads.";
+			msg = "Cleanning up threads...";
 			logger.info(msg);
-			Iterator<Thread> itr = this.threadPool.iterator();
-			while (itr.hasNext()) {
-				Thread thread = itr.next();
-				thread.join();
+			this.executorService.shutdownNow();
+			try {
+				this.executorService.awaitTermination(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				msg = "Interrupted while waiting for ClientHandlers to shutdown" + e.getMessage();
+				logger.error(msg);
 			}
-			this.threadPool.clear();
 
-			msg = "Client Request Listener has been finalized.";
+			msg = "ClientRequestListener has been finalized.";
 			logger.info(msg);
-		} catch (IOException e) {
-			String info = "IOException occurred: " + e.getMessage();
-			logger.error(info);
-		} catch (InterruptedException e) {
-			String info = "Thread interrupted while joining: " + e.getMessage();
-			logger.error(info);
 		}
 	}
 

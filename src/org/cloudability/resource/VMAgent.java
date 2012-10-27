@@ -23,7 +23,7 @@ import org.koala.internals.SSHHandler;
  * @version 0.1
  *
  */
-public class VMAgent extends Thread {
+public class VMAgent implements Runnable {
 
 	/* default timeout is 2 minutes */
 	private final static long defaultTimeout = 2 * 60 * 1000;
@@ -32,23 +32,6 @@ public class VMAgent extends Thread {
 
 	private Logger logger = Logger.getLogger(VMAgent.class);
 
-	private volatile boolean toStop;
-
-	/**
-	 * Constructor.
-	 * @param vm The VM instance to monitor.
-	 */
-	public VMAgent() {
-		super();
-		this.toStop = false;
-	}
-
-	/**
-	 * Sets the stop signal in order to stop it gracefully.
-	 */
-	public void setToStop() {
-		this.toStop = true;
-	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
@@ -57,8 +40,8 @@ public class VMAgent extends Thread {
 	public void run() {
 		String msg = "";
 		long startTime = System.currentTimeMillis();
-
 		VMInstance vm = null;
+
 		try {
 			/* allocate a VM instance */
 			CloudBroker borker = CloudBroker.createBroker("ONE");
@@ -80,12 +63,6 @@ public class VMAgent extends Thread {
 			while (vm.getStatus() != VMStatus.RUNNING) {
 				broker.updateInfo(vm);
 
-				/* check stop signal */
-				if (toStop) {
-					msg = String.format("Agent for VM#%d is stopping.", vm.getId());
-					throw new Exception(msg);
-				}
-
 				/* check time out */
 				if (System.currentTimeMillis() - startTime > defaultTimeout) {
 					msg = String.format("VM#%d preparation timeout.", vm.getId());
@@ -106,12 +83,6 @@ public class VMAgent extends Thread {
 				boolean reachable = (process.waitFor() == 0);
 
 				if (reachable) break;
-
-				/* check stop signal */
-				if (toStop) {
-					msg = String.format("Agent for VM#%d is stopping.", vm.getId());
-					throw new Exception(msg);
-				}
 
 				/* check time out */
 				if (System.currentTimeMillis() - startTime > defaultTimeout) {
@@ -135,12 +106,6 @@ public class VMAgent extends Thread {
 					sshTest = true;
 				} catch (SSHException e) {
 					sshTest = false;
-				}
-
-				/* check stop signal */
-				if (toStop) {
-					msg = String.format("Agent for VM#%d is stopping.", vm.getId());
-					throw new Exception(msg);
 				}
 
 				/* check timeout */
@@ -183,6 +148,8 @@ public class VMAgent extends Thread {
 			}
 
 			StatisticsManager.instance().addVMAllocationFailures();
+		} finally {
+			ResourceManager.instance().reduceVMAgentNumber();
 		}
 	}
 

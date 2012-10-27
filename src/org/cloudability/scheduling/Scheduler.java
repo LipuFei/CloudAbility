@@ -3,6 +3,7 @@
  */
 package org.cloudability.scheduling;
 
+import java.lang.Thread.State;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -20,14 +21,11 @@ import org.cloudability.scheduling.policy.FCFSAllocator;
  * @version 0.1
  *
  */
-public class Scheduler extends Thread {
+public class Scheduler implements Runnable {
 
 	private final static int defaultWaitInterval = 1000;
 
 	private Logger logger = Logger.getLogger(Scheduler.class);
-
-	/* a signal indicates if to stop the scheduler */
-	private boolean toStop;
 
 	private Allocator allocator;
 
@@ -35,16 +33,8 @@ public class Scheduler extends Thread {
 	 * Constructor.
 	 */
 	public Scheduler() {
-		super();
-
-		this.toStop = false;
-
 		/* initialize an allocator */
 		this.allocator = new FCFSAllocator();
-	}
-
-	public void setToStop() {
-		this.toStop = true;
 	}
 
 	/**
@@ -58,9 +48,6 @@ public class Scheduler extends Thread {
 		logger.debug(msg);
 		try {
 			while (true) {
-				/* check toStop signal */
-				if (this.toStop) break;
-
 				/* Scheduler's regular check */
 				this.regularCheck();
 				/* Resource manager's regular check */
@@ -98,15 +85,14 @@ public class Scheduler extends Thread {
 				job.setVMInstance(vm);
 				createJobMonitor(job);
 			}
-
+		} catch (InterruptedException e) {
+			msg = String.format("Interrupted while waiting: %s.", e.getMessage());
+			logger.warn(msg);
+		} finally {
 			/* finalize */
 			logger.info("Scheduler is finalizing.");
 			finialize();
-
 			logger.info("Scheduler is done.");
-		} catch (InterruptedException e) {
-			msg = String.format("Interrupted while waiting: %s.", e.getMessage());
-			logger.error(msg);
 		}
 	}
 

@@ -25,8 +25,15 @@ import org.cloudability.util.CloudConfigException;
  */
 public class CloudAbility {
 
+	static {
+		/* add shutdown hook */
+		Thread shutdownThread = new Thread(new ShutdownHook());
+		shutdownThread.setPriority(Thread.MAX_PRIORITY);
+		Runtime.getRuntime().addShutdownHook(shutdownThread);
+	}
+
 	public static ClientRequestListener listenerThread;
-	public static Scheduler schedulerThread;
+	public static Thread schedulerThread;
 
 	/**
 	 * @param args
@@ -37,9 +44,6 @@ public class CloudAbility {
 	public static void main(String[] args) throws BrokerException, InterruptedException, IOException {
 		BasicConfigurator.configure();
 
-		/* add shutdown hook */
-		Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownHook()));
-
 		/* common initialization */
 		try {
 			DataManager.initialize("config/cloud.config");
@@ -49,18 +53,8 @@ public class CloudAbility {
 			e.printStackTrace();
 		}
 
-		//testAll();
-		//testJob();
-		//testVM();
-		//testJobWithVM();
 		//testSemiAuto();
 		testFullAuto();
-
-		/* finalize resource manager */
-		//ResourceManager.instance().finalize();
-
-		/* save statistics */
-		//StatisticsManager.instance().saveToFile("statistics.txt");
 	}
 
 	/**
@@ -71,7 +65,7 @@ public class CloudAbility {
 	 */
 	public static void testFullAuto() {
 		/* start scheduler */
-		schedulerThread = new Scheduler();
+		schedulerThread = new Thread(new Scheduler());
 		schedulerThread.start();
 
 		/* start request listener */
@@ -102,9 +96,8 @@ public class CloudAbility {
 		int port = Integer.parseInt(
 			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
 			);
-		ClientRequestListener listener = new ClientRequestListener(port);
-		Thread listenThread = new Thread(listener);
-		listenThread.start();
+		Thread listenerThread = new Thread(new ClientRequestListener(port));
+		listenerThread.start();
 
 		try {
 			int i = 0;
@@ -126,123 +119,9 @@ public class CloudAbility {
 					DataManager.instance().getPendingJobQueue().addJob(job);
 					continue;
 				}
-
-				/* stop listener */
-				listener.stopListening();
-				listenThread.join();
-
-				/* stop scheduler */
-				scheduler.setToStop();
-				schedulerThread.join();
-				break;
+				System.exit(0);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public static void testJobWithVM() throws BrokerException, InterruptedException {
-		CloudBroker broker = CloudBroker.createBroker("ONE");
-
-		System.out.println("Allocating VM...");
-		VMInstance vm = broker.allocateVM();
-
-		System.out.println("Preparing Job...");
-		HashMap<String, String> p = new HashMap<String, String>();
-		p.put("REMOTE_DIR", "/opt");
-		p.put("APP.LOCAL", "/home/lfei/in4392/largelab/ffmpeg-centos.tar.gz");
-		p.put("APP.REMOTE", "ffmpeg/bin/ffmpeg");
-		p.put("APP.PARAMS", "-i /opt/cloudatlas-trailer1b_h1080p.mov -target ntsc-dvd -y /opt/output.mov");
-		p.put("INPUT.LOCAL", "/home/lfei/in4392/largelab/cloudatlas-trailer1b_h1080p.mov");
-		p.put("INPUT.REMOTE", "cloudatlas-trailer1b_h1080p.mov");
-		p.put("OUTPUT.LOCAL", "/home/lfei/in4392/largelab");
-		p.put("OUTPUT.REMOTE", "output.mov");
-		Job job = new Job(1, p);
-		job.setVMInstance(vm);
-
-		System.out.println("Starting Job...");
-		Thread t = new Thread(job);
-		t.start();
-
-		System.out.println("Waiting for the Job to finish...");
-		t.join();
-
-		System.out.println("Finalizing VM...");
-		broker.finalizeVM(vm);
-	}
-
-	public static void testVM() throws BrokerException {
-		CloudBroker broker = CloudBroker.createBroker("ONE");
-
-		System.out.println("Allocating VM.");
-		VMInstance vm = broker.allocateVM();
-
-		System.out.println("Finalizing VM.");
-		broker.finalizeVM(vm);
-	}
-
-	public static void testJob() {
-		try {
-			VMInstance vm = new VMInstance(1);
-			vm.setIpAddress("10.141.3.134");
-
-			HashMap<String, String> p = new HashMap<String, String>();
-			p.put("REMOTE_DIR", "/opt");
-			p.put("APP.LOCAL", "/home/lfei/in4392/largelab/ffmpeg-centos.tar.gz");
-			p.put("APP.REMOTE", "ffmpeg/bin/ffmpeg");
-			p.put("APP.PARAMS", "-i /opt/cloudatlas-trailer1b_h1080p.mov -target ntsc-dvd -y /opt/output.mov");
-			p.put("INPUT.LOCAL", "/home/lfei/in4392/largelab/cloudatlas-trailer1b_h1080p.mov");
-			p.put("INPUT.REMOTE", "cloudatlas-trailer1b_h1080p.mov");
-			p.put("OUTPUT.LOCAL", "/home/lfei/in4392/largelab");
-			p.put("OUTPUT.REMOTE", "output.mov");
-			Job job = new Job(1, p);
-			job.setVMInstance(vm);
-
-			Thread t = new Thread(job);
-			t.start();
-
-			t.join();
-
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public static void testAll() {
-		/* start scheduler */
-		Scheduler scheduler = new Scheduler();
-		Thread schedulerThread = new Thread(scheduler);
-		schedulerThread.start();
-
-		/* start request listener */
-		int port = Integer.parseInt(
-			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
-			);
-		ClientRequestListener listener = new ClientRequestListener(port);
-		Thread listenThread = new Thread(listener);
-		listenThread.start();
-
-		try {
-			while (true) {
-				System.in.read();
-				/* stop listener */
-				listener.stopListening();
-				listenThread.join();
-
-				/* stop scheduler */
-				scheduler.setToStop();
-				schedulerThread.join();
-				break;
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

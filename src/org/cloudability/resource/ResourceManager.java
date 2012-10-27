@@ -7,6 +7,9 @@ import java.lang.Thread.State;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -38,7 +41,8 @@ public class ResourceManager {
 	private LinkedList<VMInstance> vmList;
 
 	/* some nasty stuff */
-	private LinkedList<VMAgent> vmAgentList;
+	private ExecutorService vmAgentExecutorService;
+	private volatile int vmAgentNumber;
 
 	/* provisioning policy */
 	private Provisioner provisioner;
@@ -53,7 +57,8 @@ public class ResourceManager {
 
 		this.vmList = new LinkedList<VMInstance>();
 
-		this.vmAgentList = new LinkedList<VMAgent>();
+		this.vmAgentExecutorService = Executors.newScheduledThreadPool(5);
+		this.vmAgentNumber = 0;
 	}
 
 
@@ -99,17 +104,13 @@ public class ResourceManager {
 	/**
 	 * Finalizes the resource manager.
 	 */
-	public void finalize() {
+	public static void cleanup() {
 		try {
 			/* stop all VM Agents */
 			String msg = "Stopping all VM Agents...";
 			_instance.logger.info(msg);
-			Iterator<VMAgent> itrAgent = vmAgentList.iterator();
-			while (itrAgent.hasNext()) {
-				VMAgent agent = itrAgent.next();
-				agent.setToStop();
-				agent.join();
-			}
+			_instance.vmAgentExecutorService.shutdownNow();
+			_instance.vmAgentExecutorService.awaitTermination(5, TimeUnit.SECONDS);
 
 			/* release all VMs */
 			msg = "Releasing all VM instances...";
@@ -125,8 +126,7 @@ public class ResourceManager {
 				StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
 			}
 
-			vmAgentList.clear();
-			vmList.clear();
+			_instance.vmList.clear();
 		} catch (InterruptedException e) {
 			String msg = String.format(
 					"Provisioner thread interrupted while joining: %s.",
@@ -145,18 +145,6 @@ public class ResourceManager {
 	 * of VM instances.
 	 */
 	public void regularCheck() {
-		/* remove all terminated VM Agents */
-		synchronized (vmAgentList) {
-			Iterator<VMAgent> itr = vmAgentList.iterator();
-			while (itr.hasNext()) {
-				VMAgent agent = itr.next();
-				if (agent.getState() == State.TERMINATED) {
-					itr.remove();
-					logger.debug("Finished VMAgent removed.");
-				}
-			}
-		}
-
 		/* update VM status and remove unusable VMs */
 		synchronized (vmList) {
 			try {
@@ -213,9 +201,7 @@ public class ResourceManager {
 	 * @return The number of VMAgents running.
 	 */
 	public int getVMAgentNumber() {
-		synchronized (this.vmAgentList) {
-			return this.vmAgentList.size();
-		}
+		return this.vmAgentNumber;
 	}
 
 
@@ -232,14 +218,15 @@ public class ResourceManager {
 	 * The public interface for allocating a VM instance. It starts a VM Agent
 	 * which will allocate and prepare a VM instance until it is ready to go.
 	 */
-	public void allocateVM() {
-		VMAgent vmAgent = new VMAgent();
-		vmAgent.start();
-		synchronized (vmAgentList) {
-			vmAgentList.add(vmAgent);
-		}
+	public synchronized void allocateVM() {
+		this.vmAgentNumber++;
+		this.vmAgentExecutorService.execute(new VMAgent());
 
 		StatisticsManager.instance().addVMAllocationAttempts();
+	}
+
+	public void reduceVMAgentNumber() {
+		this.vmAgentNumber--;
 	}
 
 
