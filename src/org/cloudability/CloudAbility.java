@@ -47,7 +47,6 @@ public class CloudAbility {
 			e.printStackTrace();
 		}
 
-		//testSemiAuto();
 		testFullAuto();
 	}
 

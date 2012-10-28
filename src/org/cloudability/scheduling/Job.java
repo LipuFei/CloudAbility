@@ -153,7 +153,7 @@ public class Job implements Runnable {
 
 		Long runningTime = null;
 		if (finishTime != null) {
-			runningTime = finishTime - finishTime;
+			runningTime = finishTime - startTime;
 		}
 		data.add("runningTime", runningTime);
 
