@@ -7,10 +7,11 @@ import org.apache.log4j.Logger;
 
 import com.trilead.ssh2.Session;
 
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 import org.cloudability.adapter.Adapter;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.VMState;
+import org.cloudability.util.CloudLogger;
 import org.koala.internals.SSHException;
 import org.koala.internals.SSHHandler;
 
@@ -24,12 +25,12 @@ import org.koala.internals.SSHHandler;
  */
 public class VMAgent implements Runnable {
 
+	private final static Logger logger = CloudLogger.getSystemLogger();
+
 	/* default timeout is 2 minutes */
 	private final static long defaultTimeout = 2 * 60 * 1000;
 	/* default wait period is 300 milliseconds */
 	private final static long defaultWaitPeriod = 300;
-
-	private Logger logger = Logger.getLogger(VMAgent.class);
 
 
 	/* (non-Javadoc)
@@ -93,7 +94,7 @@ public class VMAgent implements Runnable {
 			msg = String.format("Trying to reach VM#%d using SSH.", vm.getId());
 			logger.debug(msg);
 			String vmUsername =
-					DataManager.instance().getConfigMap().get("VM.USERNAME");
+					CentralManager.instance().getConfigMap().get("VM.USERNAME");
 			boolean sshTest = false;
 			while (!sshTest) {
 				try {

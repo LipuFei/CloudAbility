@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
+import org.cloudability.util.CloudLogger;
 
 import org.apache.log4j.Logger;
 
@@ -18,12 +19,13 @@ import org.apache.log4j.Logger;
  */
 public class ShutdownHook implements Runnable {
 
+	private final static Logger logger = CloudLogger.getSystemLogger();
+
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
-		Logger logger = Logger.getLogger(ShutdownHook.class);
 		/* stop listener */
 		logger.info("Stopping listener...");
 		CloudAbility.listenerThread.setToStop();

@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2012  Lipu Fei
  */
-package org.cloudability.server;
+package org.cloudability.server.job;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,6 +14,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
+import org.cloudability.util.CloudLogger;
 
 /**
  * This is a runnable class that listens and accepts client connections.
@@ -21,12 +22,12 @@ import org.apache.log4j.Logger;
  * @version 0.1
  *
  */
-public class ClientRequestListener extends Thread {
+public class ClientJobListener extends Thread {
+
+	private final static Logger logger = CloudLogger.getSystemLogger();
 
 	/* for each try, the listening thread blocks for 1sec */
 	private final static int blockingPeriod = 1000;
-
-	private Logger logger;
 
 	private volatile boolean toStop;
 
@@ -38,9 +39,8 @@ public class ClientRequestListener extends Thread {
 	 * Constructor.
 	 * @param port The port to listen.
 	 */
-	public ClientRequestListener(int port) {
+	public ClientJobListener(int port) {
 		super();
-		this.logger = Logger.getLogger(ClientRequestListener.class);
 		this.toStop = false;
 
 		this.port = port;
@@ -84,7 +84,7 @@ public class ClientRequestListener extends Thread {
 
 				msg = "Incoming connection accepted, creating a thread.";
 				logger.debug(msg);
-				this.executorService.execute(new ClientRequestHandler(channel));
+				this.executorService.execute(new ClientJobHandler(channel));
 
 				/* recreate a selector */
 				selector.close();

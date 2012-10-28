@@ -10,17 +10,18 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
-import org.cloudability.DataManager;
-import org.cloudability.analysis.Profiler;
-import org.cloudability.analysis.Recorder;
-import org.cloudability.analysis.StatisticsData;
-import org.cloudability.resource.VMInstance;
-import org.koala.internals.SSHHandler;
-
 import com.trilead.ssh2.ChannelCondition;
 import com.trilead.ssh2.SCPClient;
 import com.trilead.ssh2.Session;
 import com.trilead.ssh2.StreamGobbler;
+
+import org.cloudability.CentralManager;
+import org.cloudability.analysis.Profiler;
+import org.cloudability.analysis.Recorder;
+import org.cloudability.analysis.StatisticsData;
+import org.cloudability.resource.VMInstance;
+import org.cloudability.util.CloudLogger;
+import org.koala.internals.SSHHandler;
 
 /**
  * A data class for job that maintains all data related to it. An executable
@@ -34,7 +35,7 @@ public class Job implements Runnable {
 	/* auto generating job ID */
 	private static int maxJobId = 0;
 
-	private Logger logger = Logger.getLogger(Job.class);
+	private Logger logger;
 
 	/* for profiling */
 	private Profiler profiler = new Profiler();
@@ -58,10 +59,8 @@ public class Job implements Runnable {
 
 	/* other information needed by other modules */
 	private long arrivalTime;
-	private long executionTime;
 	private long waitTime;
 
-	private int priority;
 	private int failure;
 
 	/**
@@ -72,14 +71,15 @@ public class Job implements Runnable {
 	public Job(int id, HashMap<String, String> parameterMap) {
 		this.arrivalTime = System.currentTimeMillis();
 
-		this.status = JobStatus.PENDING;
-
 		this.id = id;
+		this.status = JobStatus.PENDING;
 		this.vmInstance = null;
 		this.parameterMap = parameterMap;
 
 		this.waitTime = 0;
 		this.failure = 0;
+
+		this.logger = CloudLogger.getJobLogger(id);
 
 		/* profiling */
 		this.recorder.record("arrivalTime", this.arrivalTime);
@@ -208,7 +208,7 @@ public class Job implements Runnable {
 		msg = "Getting VM parameters...";
 		logger.debug(msg);
 		String vmUsername =
-				DataManager.instance().getConfigMap().get("VM.USERNAME");
+				CentralManager.instance().getConfigMap().get("VM.USERNAME");
 		String vmIp = this.vmInstance.getIpAddress();
 
 		/* get parameters */
@@ -382,8 +382,8 @@ public class Job implements Runnable {
 			this.vmInstance.free();
 
 			/* move itself from running job queue to finished job queue */
-			DataManager.instance().removeRunningJob(this);
-			DataManager.instance().addFinishedJob(this);
+			CentralManager.instance().removeRunningJob(this);
+			CentralManager.instance().addFinishedJob(this);
 		}
 	}
 

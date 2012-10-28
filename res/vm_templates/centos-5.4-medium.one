@@ -1,7 +1,7 @@
-NAME   = CentOS-5.4
+NAME   = CentOS-5.4-Medium
 CPU    = 1
-VCPU   = 4
-MEMORY = 512
+VCPU   = 2
+MEMORY = 1024
 
 OS     = [
   arch = x86_64
@@ -33,17 +33,17 @@ DISK   = [
 NIC    = [
   # NETWORK = "Small network"
   # OpenNebula API change: now refer to NETWORK ID:
-  NETWORK_ID=0
+  NETWORK_ID = 0
 ]
 
 GRAPHICS = [
-  TYPE    = "vnc",
-  LISTEN  = "0.0.0.0"
+  TYPE   = "vnc",
+  LISTEN = "0.0.0.0"
 ]
 
 FEATURES = [
   # Needed for graceful shutdown with KVM:
-  acpi="yes"
+  acpi = "yes"
 ]
 
 RAW = [

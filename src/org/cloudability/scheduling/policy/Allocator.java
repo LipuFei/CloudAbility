@@ -3,7 +3,7 @@
  */
 package org.cloudability.scheduling.policy;
 
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 import org.cloudability.scheduling.Job;
 import org.cloudability.scheduling.JobQueue;
 
@@ -24,7 +24,7 @@ public abstract class Allocator {
 	 * Constructor.
 	 */
 	public Allocator() {
-		this.pendingQueue = DataManager.instance().getPendingJobQueue();
+		this.pendingQueue = CentralManager.instance().getPendingJobQueue();
 		this.selectedJob = null;
 	}
 

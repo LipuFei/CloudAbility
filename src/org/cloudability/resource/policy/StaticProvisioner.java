@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.util.CloudConfigException;
@@ -36,7 +36,7 @@ public class StaticProvisioner extends Provisioner {
 	@Override
 	protected void parseParameters() throws CloudConfigException {
 		HashMap<String, String> configMap =
-				DataManager.instance().getConfigMap();
+				CentralManager.instance().getConfigMap();
 		try {
 			this.allocationNumber = Integer.parseInt(
 					configMap.get("PROVISION.STATIC.TOTALNUM"));

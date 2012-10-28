@@ -26,12 +26,7 @@ import org.apache.log4j.Logger;
  */
 public class CloudConfig {
 
-	private final static Logger logger;
-
-	/* initialize the logger */
-	static {
-		logger = Logger.getLogger(CloudConfig.class);
-	}
+	private final static Logger logger = CloudLogger.getSystemLogger();
 
 	/**
 	 * Parse the configuration file.

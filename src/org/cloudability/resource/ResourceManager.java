@@ -12,14 +12,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import org.cloudability.DataManager;
-import org.cloudability.analysis.Recorder;
+import org.cloudability.CentralManager;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.VMState;
 import org.cloudability.resource.policy.Provisioner;
 import org.cloudability.resource.policy.SimpleElasticProvisioner;
 import org.cloudability.resource.policy.StaticProvisioner;
 import org.cloudability.util.CloudConfigException;
+import org.cloudability.util.CloudLogger;
 
 /**
  * A singleton that maintains the VM resources and performs provisioning
@@ -30,10 +30,10 @@ import org.cloudability.util.CloudConfigException;
  */
 public class ResourceManager {
 
+	private final static Logger logger = CloudLogger.getSystemLogger();
+
 	/* the only instance */
 	private static ResourceManager _instance;
-
-	private Logger logger;
 
 	/* list of VM instances */
 	private LinkedList<VMInstance> vmList;
@@ -59,8 +59,6 @@ public class ResourceManager {
 	 * @throws CloudConfigException
 	 */
 	public ResourceManager() throws CloudConfigException {
-		this.logger = Logger.getLogger(ResourceManager.class);
-
 		this.vmList = new LinkedList<VMInstance>();
 
 		this.vmAgentExecutorService = Executors.newScheduledThreadPool(5);
@@ -76,7 +74,7 @@ public class ResourceManager {
 
 		/* initialize provisioning policy */
 		HashMap<String, String> configMap =
-				DataManager.instance().getConfigMap();
+				CentralManager.instance().getConfigMap();
 		String provisionerName = configMap.get("PROVISION.POLICY");
 
 		if (provisionerName.equals("STATIC")) {
@@ -88,12 +86,12 @@ public class ResourceManager {
 		/* Unknown provisioning policy */
 		else {
 			String msg = String.format("Unknown provisioning policy name: %s.", provisionerName);
-			_instance.logger.error(msg);
+			logger.error(msg);
 			throw new CloudConfigException(msg);
 		}
 
 		String info = "Resource Manager has been initialized.";
-		_instance.logger.info(info);
+		logger.info(info);
 	}
 
 	/**
@@ -103,13 +101,13 @@ public class ResourceManager {
 		try {
 			/* stop all VM Agents */
 			String msg = "Stopping all VM Agents...";
-			_instance.logger.info(msg);
+			logger.info(msg);
 			_instance.vmAgentExecutorService.shutdownNow();
 			_instance.vmAgentExecutorService.awaitTermination(5, TimeUnit.SECONDS);
 
 			/* release all VMs */
 			msg = "Releasing all VM instances...";
-			_instance.logger.info(msg);
+			logger.info(msg);
 			Iterator<VMInstance> itrVM = _instance.vmList.iterator();
 			while (itrVM.hasNext()) {
 				VMInstance vm = itrVM.next();
@@ -122,11 +120,11 @@ public class ResourceManager {
 			String msg = String.format(
 					"Provisioner thread interrupted while joining: %s.",
 					e.getMessage());
-			_instance.logger.error(msg);
+			logger.error(msg);
 		} catch (Exception e) {
 			String msg = String.format("Unable to release VM instances: %s.",
 					e.getMessage());
-			_instance.logger.error(msg);
+			logger.error(msg);
 		}
 	}
 

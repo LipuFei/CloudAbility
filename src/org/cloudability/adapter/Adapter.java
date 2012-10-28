@@ -3,7 +3,7 @@
  */
 package org.cloudability.adapter;
 
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 
 /**
  * @author Lipu Fei
@@ -25,13 +25,13 @@ public abstract class Adapter {
 		/* OpenNebular adapter for DAS-4 */
 		if (name.equals("ONE")) {
 			String serverUrl =
-				DataManager.instance().getConfigMap().get("ONE.XMLRPC_URL");
+				CentralManager.instance().getConfigMap().get("ONE.XMLRPC_URL");
 			String username =
-				DataManager.instance().getConfigMap().get("ONE.USERNAME");
+				CentralManager.instance().getConfigMap().get("ONE.USERNAME");
 			String password =
-				DataManager.instance().getConfigMap().get("ONE.PASSWORD");
+				CentralManager.instance().getConfigMap().get("ONE.PASSWORD");
 			String vmTemplate =
-				DataManager.instance().getConfigMap().get("ONE.VM_TEMPLATE");
+				CentralManager.instance().getConfigMap().get("ONE.VM_TEMPLATE");
 			adapter = new OneAdapter(serverUrl, username, password, vmTemplate);
 		}
 		/* Unknown adapter */

@@ -14,8 +14,6 @@ import com.trilead.ssh2.SFTPv3Client;
 import com.trilead.ssh2.ServerHostKeyVerifier;
 import com.trilead.ssh2.Session;
 
-import org.apache.log4j.Logger;
-
 /**
  * Utility class for SSH.
  * @author KOALA
@@ -23,8 +21,6 @@ import org.apache.log4j.Logger;
  *
  */
 public class SSHHandler {
-
-	private static Logger logger = Logger.getLogger(SSHHandler.class);
 
 	private static final String known_hosts = System.getenv("HOME") + "/.ssh/known_hosts";
 	private static final String keyfile_dsa = System.getenv("HOME") + "/.ssh/id_dsa";
@@ -41,7 +37,7 @@ public class SSHHandler {
 		return null;
 	}
 
-	public Connection getConnection(String hostname, String username)
+	private Connection getConnection(String hostname, String username)
 				throws SSHException {
 		String priv_key = this.getKeyFile();
 		if (priv_key == null) {
@@ -119,8 +115,10 @@ public class SSHHandler {
 		return scp;
 	}
 
+
 	private class SimpleVerifier implements ServerHostKeyVerifier {
-		KnownHosts database;
+
+		private KnownHosts database;
 
 		public SimpleVerifier(KnownHosts database) {
 			if (database == null) {
@@ -130,7 +128,7 @@ public class SSHHandler {
 		}
 
 		public boolean verifyServerHostKey(String hostname, int port, String serverHostKeyAlgorithm, byte[] serverHostKey)
-				throws IllegalStateException, IOException{
+				throws IllegalStateException, IOException {
 			int result = database.verifyHostkey(hostname, serverHostKeyAlgorithm, serverHostKey);
 			switch (result) {
 			case KnownHosts.HOSTKEY_IS_OK:

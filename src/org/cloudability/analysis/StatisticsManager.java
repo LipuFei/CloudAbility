@@ -256,7 +256,7 @@ public class StatisticsManager {
 
 		/* detailed job statistics */
 		writer.write("\n====================\nDetail Job Statistics\n====================\n");
-		writer.write("#jobId arrivalTime failures makespan waitTime runningTime uploadTime tarballExtractionTime executionTime downloadTime\n");
+		writer.write("#id arrivalTime failures makespan waitTime runningTime uploadTime tarballExtractionTime executionTime downloadTime\n");
 		itr2 = this.jobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
 			Entry<Integer, StatisticsData> entry = itr2.next();
@@ -280,7 +280,7 @@ public class StatisticsManager {
 
 		/* unfinished job statistics */
 		writer.write("\n====================\nUnfinished Job Statistics\n====================\n");
-		writer.write("#jobId arrivalTime failures\n");
+		writer.write("#id arrivalTime failures\n");
 		itr2 = this.unfinishedJobStatisticsMap.entrySet().iterator();
 		while (itr2.hasNext()) {
 			Entry<Integer, StatisticsData> entry = itr2.next();
@@ -326,11 +326,11 @@ public class StatisticsManager {
 
 		/* system performance over time */
 		writer.write("\n====================\nSystem Performance Over Time\n====================\n");
-		writer.write("#Timestamp #JobsPending #JobsRunning #VMInstances\n");
+		writer.write("#Timestamp JobsPending JobsRunning VMInstances\n");
 		Iterator<StatisticsData> itr4 = systemPerformanceList.iterator();
 		while (itr4.hasNext()) {
 			StatisticsData data = itr4.next();
-			content = String.format("%d %d %d %d\n",
+			content = String.format("%d\t%d\t%d\t%d\n",
 					data.get("Time"),
 					data.get("JobsPending"),
 					data.get("JobsRunning"),

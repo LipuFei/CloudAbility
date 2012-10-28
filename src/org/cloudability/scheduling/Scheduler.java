@@ -8,13 +8,14 @@ import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
 
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.Job.JobStatus;
 import org.cloudability.scheduling.policy.Allocator;
 import org.cloudability.scheduling.policy.FCFSAllocator;
+import org.cloudability.util.CloudLogger;
 
 /**
  * The scheduler.
@@ -24,9 +25,9 @@ import org.cloudability.scheduling.policy.FCFSAllocator;
  */
 public class Scheduler implements Runnable {
 
-	private final static int defaultWaitInterval = 1000;
+	private final static Logger logger = CloudLogger.getSystemLogger();
 
-	private Logger logger = Logger.getLogger(Scheduler.class);
+	private final static int defaultWaitInterval = 1000;
 
 	private Allocator allocator;
 
@@ -43,7 +44,7 @@ public class Scheduler implements Runnable {
 	 */
 	@Override
 	public void run() {
-		JobQueue pendingQueue = DataManager.instance().getPendingJobQueue();
+		JobQueue pendingQueue = CentralManager.instance().getPendingJobQueue();
 
 		String msg = "Scheduler has started.";
 		logger.debug(msg);
@@ -56,7 +57,7 @@ public class Scheduler implements Runnable {
 				ResourceManager.instance().regularCheck();
 
 				/* update job status, such as wait time, priority, etc. */
-				DataManager.instance().updateSystemStatus();
+				CentralManager.instance().updateSystemStatus();
 
 				/* provisioner's regular check */
 				ResourceManager.instance().provisionerRegularCheck();
@@ -85,7 +86,7 @@ public class Scheduler implements Runnable {
 				/* occupy the VM and execute the job on it */
 				vm.assign();
 				job.setVMInstance(vm);
-				DataManager.instance().executeJob(job);
+				CentralManager.instance().executeJob(job);
 			}
 		} catch (InterruptedException e) {
 			msg = String.format("Interrupted while waiting: %s.", e.getMessage());
@@ -105,7 +106,7 @@ public class Scheduler implements Runnable {
 	 * monitoring. 
 	 */
 	private void finialize() {
-		DataManager.cleanup();
+		CentralManager.cleanup();
 	}
 
 
@@ -113,7 +114,7 @@ public class Scheduler implements Runnable {
 	 * Check finished jobs. Record succeed jobs and deal with failed jobs.
 	 */
 	private void regularCheck() {
-		LinkedList<Job> jobList = DataManager.instance().getFinishedJobQueue();
+		LinkedList<Job> jobList = CentralManager.instance().getFinishedJobQueue();
 		synchronized (jobList) {
 			Iterator<Job> itr = jobList.iterator();
 			while (itr.hasNext()) {
@@ -125,12 +126,12 @@ public class Scheduler implements Runnable {
 				}
 				/* handle failed jobs */
 				else if (job.getStatus() == JobStatus.FAILED) {
-					DataManager.instance().getPendingJobQueue().addJob(job);
+					CentralManager.instance().getPendingJobQueue().addJob(job);
 				}
 				/* unexpected status */
 				else {
 					String msg = "Unexpected job status in finished job queue.";
-					this.logger.warn(msg);
+					logger.warn(msg);
 				}
 
 				itr.remove();

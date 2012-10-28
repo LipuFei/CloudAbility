@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.util.CloudConfigException;
@@ -39,7 +39,7 @@ public class SimpleElasticProvisioner extends Provisioner {
 	@Override
 	protected void parseParameters() throws CloudConfigException {
 		HashMap<String, String> configMap =
-				DataManager.instance().getConfigMap();
+				CentralManager.instance().getConfigMap();
 		try {
 			this.pendingJobThreshold =
 					Integer.parseInt(configMap.get("PROVISION.SIMPLE_ELASTIC.PENDINGJOB_THRESHOLD"));
@@ -71,8 +71,8 @@ public class SimpleElasticProvisioner extends Provisioner {
 	 */
 	@Override
 	public void regularCheck() {
-		int pendingJobNumber = DataManager.instance().getPendingJobQueue().size();
-		int runningJobNumber = DataManager.instance().getRunningJobNumber();
+		int pendingJobNumber = CentralManager.instance().getPendingJobQueue().size();
+		int runningJobNumber = CentralManager.instance().getRunningJobNumber();
 		int currentVMNumber = ResourceManager.instance().getVMAgentNumber() +
 				ResourceManager.instance().getResourceNumber();
 

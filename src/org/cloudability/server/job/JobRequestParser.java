@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2012  Lipu Fei
  */
-package org.cloudability.server;
+package org.cloudability.server.job;
 
 import org.cloudability.scheduling.Job;
 
@@ -11,13 +11,13 @@ import org.cloudability.scheduling.Job;
  * @version 0.1
  *
  */
-public abstract class RequestParser {
+public abstract class JobRequestParser {
 
 	/**
 	 * Parses a request content.
 	 * @param content The request content.
 	 * @return The parsed object.
 	 */
-	public abstract Job parse(String content) throws RequestSyntaxException;
+	public abstract Job parse(String content) throws JobRequestSyntaxException;
 
 }

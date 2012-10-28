@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2012  Lipu Fei
  */
-package org.cloudability.server;
+package org.cloudability.server.job;
 
 import java.util.HashMap;
 
@@ -17,16 +17,16 @@ import org.cloudability.scheduling.Job.JobStatus;
  * @version 0.1
  *
  */
-public class SimpleRequestParser extends RequestParser {
+public class SimpleJobRequestParser extends JobRequestParser {
 
 	/**
 	 * Constructor.
 	 */
-	public SimpleRequestParser() {
+	public SimpleJobRequestParser() {
 	}
 
 	@Override
-	public Job parse(String content) throws RequestSyntaxException {
+	public Job parse(String content) throws JobRequestSyntaxException {
 		String[] pairs = content.trim().split(";");
 
 		HashMap<String, String> parameterMap = new HashMap<String, String>();
@@ -39,11 +39,11 @@ public class SimpleRequestParser extends RequestParser {
 			/* syntax check */
 			if (params.length != 2) {
 				/* log and throw exception */
-				Logger logger = Logger.getLogger(SimpleRequestParser.class);
+				Logger logger = Logger.getLogger(SimpleJobRequestParser.class);
 				String msg = String.format(
 						"Syntax error: %s.", pairs[i].trim());
 				logger.error(msg);
-				throw new RequestSyntaxException(msg);
+				throw new JobRequestSyntaxException(msg);
 			}
 
 			/* add into hash map */

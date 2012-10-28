@@ -9,10 +9,9 @@ import java.util.HashMap;
 import org.apache.log4j.BasicConfigurator;
 
 import org.cloudability.resource.ResourceManager;
-import org.cloudability.resource.VMInstance;
 import org.cloudability.scheduling.Job;
 import org.cloudability.scheduling.Scheduler;
-import org.cloudability.server.ClientRequestListener;
+import org.cloudability.server.job.ClientJobListener;
 import org.cloudability.util.CloudConfigException;
 
 /**
@@ -30,7 +29,7 @@ public class CloudAbility {
 		Runtime.getRuntime().addShutdownHook(shutdownThread);
 	}
 
-	public static ClientRequestListener listenerThread;
+	public static ClientJobListener listenerThread;
 	public static Thread schedulerThread;
 
 	/**
@@ -39,11 +38,9 @@ public class CloudAbility {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws InterruptedException, IOException {
-		BasicConfigurator.configure();
-
 		/* common initialization */
 		try {
-			DataManager.initialize("config/cloud.config");
+			CentralManager.initialize("config/cloud.config");
 			ResourceManager.initialize();
 
 		} catch (CloudConfigException e) {
@@ -67,9 +64,9 @@ public class CloudAbility {
 
 		/* start request listener */
 		int port = Integer.parseInt(
-			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
+			CentralManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
 			);
-		listenerThread = new ClientRequestListener(port);
+		listenerThread = new ClientJobListener(port);
 		listenerThread.start();
 
 		try {
@@ -91,9 +88,9 @@ public class CloudAbility {
 
 		/* start request listener */
 		int port = Integer.parseInt(
-			DataManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
+			CentralManager.instance().getConfigMap().get("CONFIG.LISTEN_PORT")
 			);
-		Thread listenerThread = new Thread(new ClientRequestListener(port));
+		Thread listenerThread = new Thread(new ClientJobListener(port));
 		listenerThread.start();
 
 		try {
@@ -113,7 +110,7 @@ public class CloudAbility {
 					p.put("OUTPUT.LOCAL", "/home/lfei/in4392/largelab");
 					p.put("OUTPUT.REMOTE", String.format("output%d.mov", i));
 					Job job = new Job(i, p);
-					DataManager.instance().getPendingJobQueue().addJob(job);
+					CentralManager.instance().getPendingJobQueue().addJob(job);
 					continue;
 				}
 				System.exit(0);

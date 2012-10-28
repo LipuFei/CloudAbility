@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2012  Lipu Fei
  */
-package org.cloudability.server;
+package org.cloudability.server.job;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -9,9 +9,10 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.apache.log4j.Logger;
-import org.cloudability.DataManager;
+import org.cloudability.CentralManager;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.scheduling.Job;
+import org.cloudability.util.CloudLogger;
 
 /**
  * This is a runnable class that handles a single client request.
@@ -19,12 +20,12 @@ import org.cloudability.scheduling.Job;
  * @version 0.1
  *
  */
-public class ClientRequestHandler implements Runnable {
+public class ClientJobHandler implements Runnable {
+
+	private final static Logger logger = CloudLogger.getSystemLogger();
 
 	private final static String defaultCharset = "UTF-8";
 	private final static int defaultBufferSize = 128 * 1024;
-
-	private Logger logger;
 
 	private SocketChannel channel;
 	private ByteBuffer buffer;
@@ -34,8 +35,7 @@ public class ClientRequestHandler implements Runnable {
 	 * Constructor.
 	 * @param channel The incoming client channel.
 	 */
-	public ClientRequestHandler(SocketChannel channel) {
-		this.logger = Logger.getLogger(ClientRequestHandler.class);
+	public ClientJobHandler(SocketChannel channel) {
 		this.channel = channel;
 		this.buffer = ByteBuffer.allocate(defaultBufferSize);
 		this.charset = Charset.forName(defaultCharset);
@@ -80,18 +80,18 @@ public class ClientRequestHandler implements Runnable {
 			logger.debug("===== CONTENT BEGIN =====");
 			logger.debug(content);
 			logger.debug("===== CONTENT END =====");
-			RequestParser parser = new SimpleRequestParser();
+			JobRequestParser parser = new SimpleJobRequestParser();
 			Job job = parser.parse(content);
 
 			/* put job into the pending queue */
-			DataManager.instance().getPendingJobQueue().addJob(job);
+			CentralManager.instance().getPendingJobQueue().addJob(job);
 
 			StatisticsManager.instance().addAcceptedJob();
 
 		} catch (IOException e) {
 			String msg = String.format("IO exception: %s.", e.getMessage());
 			logger.error(msg);
-		} catch (RequestSyntaxException e) {
+		} catch (JobRequestSyntaxException e) {
 			String msg = String.format(
 					"Request syntax exception: %s.",
 					e.getMessage());

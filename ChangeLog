@@ -264,3 +264,32 @@ Changes:
 Todos:
 1. Improve log4j. Create configuration file. Output logs into seperate files:
    One for system, and each job should have a log file., etc.
+
+
+2012-10-28  13:31  Lipu Fei
+==================================================
+Fixes:
+1. Eliminated warnings in some classes.
+
+Changes:
+1. A centralized logger CloudLogger added. Seperate log files for the system and
+   jobs are enabled.
+2. DataManager has been renamed as "CentralManager".
+3. ClientRequestListener and ClientRequestHandler are renamed as
+   "ClientJobListener" and "ClientJobHandler" respectively.
+4. The things in org.cloudability.server.job have been moved to package
+   "org.cloudability.server.job" because other servers may be added in the
+   future.
+
+Todos:
+1. Consider to change the pending job queue to be a blocking queue, and remove
+   the JobQueue class.
+2. It looks like a mess to use a module named "CentralManager" while there is
+   another manager named "ResourceManager". Although merging them altogether
+   would create a massive "god" class, but this option may still be considered.
+3. Improve statistics module. May consider using DB such as SQLite.
+4. Make job executiong more automatic, using a single script file or python
+   script like what SkyMark does.
+5. Create a Web server and a DB server for collecting application data.
+6. Add functionality to support Amazon EC2.
+7. Consider to implement multi-tenancy.

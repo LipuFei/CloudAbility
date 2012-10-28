@@ -20,6 +20,7 @@ import org.cloudability.scheduling.Job.JobStatus;
 import org.cloudability.scheduling.JobQueue;
 import org.cloudability.util.CloudConfig;
 import org.cloudability.util.CloudConfigException;
+import org.cloudability.util.CloudLogger;
 
 /**
  * A singleton class responsible for maintaining all globally shared data,
@@ -28,12 +29,12 @@ import org.cloudability.util.CloudConfigException;
  * @version 0.1
  *
  */
-public class DataManager {
+public class CentralManager {
+
+	private static Logger logger = CloudLogger.getSystemLogger();
 
 	/* the only instance */
-	private static DataManager _instance;
-
-	private Logger logger = Logger.getLogger(DataManager.class);
+	private static CentralManager _instance;
 
 	/* configurations */
 	private volatile HashMap<String, String> configMap;
@@ -50,7 +51,7 @@ public class DataManager {
 	 * Constructor.
 	 * @throws CloudConfigException 
 	 */
-	public DataManager(String configFilePath) throws CloudConfigException  {
+	public CentralManager(String configFilePath) throws CloudConfigException  {
 		/* initialize the configuration map */
 		this.configMap = CloudConfig.parseFile(configFilePath);
 
@@ -66,16 +67,20 @@ public class DataManager {
 	 */
 	public static void initialize(String configFilePath)
 				throws CloudConfigException {
-		_instance = new DataManager(configFilePath);
+		_instance = new CentralManager(configFilePath);
 	}
 
+	/**
+	 * This finalizes everything controlled by DataManager, including stopping
+	 * jobs in executing and recording unfinished jobs.
+	 */
 	public static void cleanup() {
 		_instance.jobExecutorService.shutdownNow();
 		try {
 			_instance.jobExecutorService.awaitTermination(5, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			String msg = String.format("Interrupted while waitting for jobs: %s.", e.getMessage());
-			_instance.logger.error(msg);
+			logger.error(msg);
 		}
 
 		/* record unfinished jobs */
@@ -109,13 +114,14 @@ public class DataManager {
 	 * Gets the instance.
 	 * @return the DataManager instance.
 	 */
-	public static DataManager instance() {
+	public static CentralManager instance() {
 		return _instance;
 	}
 
 	public HashMap<String, String> getConfigMap() {
 		return this.configMap;
 	}
+
 
 	public JobQueue getPendingJobQueue() {
 		return this.pendingJobQueue;
@@ -199,7 +205,7 @@ public class DataManager {
 				"Jobs in pending queue: %d.", pendingJobs);
 		logger.info(msg);
 		msg = String.format(
-				"JobMonitors running: %d.", runningJobs);
+				"Running job: %d.", runningJobs);
 		logger.info(msg);
 		msg = String.format(
 				"VMInstances in resource pool: %d.", vms);
