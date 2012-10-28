@@ -41,17 +41,8 @@ public class Job implements Runnable {
 	private Profiler profiler = new Profiler();
 	private Recorder recorder = new Recorder();
 
-	/* Statuses of a job */
-	public enum JobStatus {
-		PENDING,
-		RUNNING,
-		FINISHED,
-		FAILED,
-		STOPPED
-	}
-
 	private int id;
-	private JobStatus status;
+	private JobState state;
 	private VMInstance vmInstance;
 
 	/* parameter map, includes execution related information */
@@ -72,7 +63,7 @@ public class Job implements Runnable {
 		this.arrivalTime = System.currentTimeMillis();
 
 		this.id = id;
-		this.status = JobStatus.PENDING;
+		this.state = JobState.PENDING;
 		this.vmInstance = null;
 		this.parameterMap = parameterMap;
 
@@ -172,11 +163,11 @@ public class Job implements Runnable {
 		return this.id;
 	}
 
-	public void setStatus(JobStatus status) {
-		this.status = status;
+	public void setState(JobState state) {
+		this.state = state;
 	}
-	public JobStatus getStatus() {
-		return this.status;
+	public JobState getState() {
+		return this.state;
 	}
 
 	public void setVMInstance(VMInstance vmInstance) {
@@ -186,9 +177,6 @@ public class Job implements Runnable {
 		return this.vmInstance;
 	}
 
-	public void setArrivalTime(long arrivalTime) {
-		this.arrivalTime = arrivalTime;
-	}
 	public long getArrivalTime() {
 		return this.arrivalTime;
 	}
@@ -227,7 +215,7 @@ public class Job implements Runnable {
 			/* change status to running */
 			msg = String.format("Job#%d has been started...", id);
 			logger.info(msg);
-			this.status = JobStatus.RUNNING;
+			this.state = JobState.RUNNING;
 
 			/*
 			 * STEP #1. upload execution and input files
@@ -362,7 +350,7 @@ public class Job implements Runnable {
 			logger.info(msg);
 
 			/* update status */
-			this.status = JobStatus.FINISHED;
+			this.state = JobState.FINISHED;
 
 			/* profiling */
 			this.recorder.record("finishTime", System.currentTimeMillis());
@@ -372,7 +360,7 @@ public class Job implements Runnable {
 			logger.error(msg);
 
 			/* update status */
-			this.status = JobStatus.FAILED;
+			this.state = JobState.FAILED;
 			this.failure++;
 
 			/* clear profiler */

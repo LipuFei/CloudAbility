@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.cloudability.scheduling.Job;
-import org.cloudability.scheduling.Job.JobStatus;
+import org.cloudability.scheduling.JobState;
 
 /**
  * Simple request parser. The syntax is in the form
@@ -54,8 +54,6 @@ public class SimpleJobRequestParser extends JobRequestParser {
 
 		/* create a job */
 		Job job = new Job(Job.generateJobID(), parameterMap);
-		job.setArrivalTime(System.currentTimeMillis());
-		job.setStatus(JobStatus.PENDING);
 
 		return job;
 	}

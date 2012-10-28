@@ -12,7 +12,6 @@ import org.cloudability.CentralManager;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
-import org.cloudability.scheduling.Job.JobStatus;
 import org.cloudability.scheduling.policy.Allocator;
 import org.cloudability.scheduling.policy.FCFSAllocator;
 import org.cloudability.util.CloudLogger;
@@ -121,11 +120,11 @@ public class Scheduler implements Runnable {
 				Job job = itr.next();
 
 				/* record succeeded jobs */
-				if (job.getStatus() == JobStatus.FINISHED) {
+				if (job.getState() == JobState.FINISHED) {
 					StatisticsManager.instance().recordJob(job);
 				}
 				/* handle failed jobs */
-				else if (job.getStatus() == JobStatus.FAILED) {
+				else if (job.getState() == JobState.FAILED) {
 					CentralManager.instance().getPendingJobQueue().addJob(job);
 				}
 				/* unexpected status */

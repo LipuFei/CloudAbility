@@ -16,7 +16,7 @@ import org.cloudability.analysis.StatisticsData;
 import org.cloudability.analysis.StatisticsManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.scheduling.Job;
-import org.cloudability.scheduling.Job.JobStatus;
+import org.cloudability.scheduling.JobState;
 import org.cloudability.scheduling.JobQueue;
 import org.cloudability.util.CloudConfig;
 import org.cloudability.util.CloudConfigException;
@@ -93,7 +93,7 @@ public class CentralManager {
 		itr = _instance.runningJobQueue.iterator();
 		while (itr.hasNext()) {
 			Job job = itr.next();
-			if (job.getStatus() == JobStatus.FINISHED)
+			if (job.getState() == JobState.FINISHED)
 				StatisticsManager.instance().recordJob(job);
 			else
 				StatisticsManager.instance().recordUnfinishedJob(job);
@@ -102,7 +102,7 @@ public class CentralManager {
 		itr = _instance.finishedJobQueue.iterator();
 		while (itr.hasNext()) {
 			Job job = itr.next();
-			if (job.getStatus() == JobStatus.FINISHED)
+			if (job.getState() == JobState.FINISHED)
 				StatisticsManager.instance().recordJob(job);
 			else
 				StatisticsManager.instance().recordUnfinishedJob(job);
