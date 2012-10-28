@@ -198,13 +198,18 @@ public class StatisticsManager {
 
 		Long[] vmPreparationTime = createMetric();
 		Iterator<Long> itr1 = this.vmPreparationTimeList.iterator();
+		Long vmTotal = 0L;
 		while (itr1.hasNext()) {
-			updateMetric(vmPreparationTime, itr1.next());
+			Long preparationTime = itr1.next();
+			updateMetric(vmPreparationTime, preparationTime);
+			if (preparationTime != null)
+				vmTotal++;
 		}
-		if (this.vmPreparationTimeList.size() > 0) {
+		if (vmTotal > 0) {
 			content += String.format(
 					"VM preparation time: %s sec\n",
-					formatMetric(vmPreparationTime, new Long(this.vmPreparationTimeList.size())));
+					formatMetric(vmPreparationTime, vmTotal)
+			);
 		}
 		else {
 			content += "VM preparation time: null\n";

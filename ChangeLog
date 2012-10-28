@@ -293,3 +293,17 @@ Todos:
 5. Create a Web server and a DB server for collecting application data.
 6. Add functionality to support Amazon EC2.
 7. Consider to implement multi-tenancy.
+
+
+2012-10-28  22:20  Lipu Fei
+==================================================
+Fixes:
+1. Fixed the problem that not all VM instances are recorded.
+2. Fixed a bug in StatisticsManager. The calculation of preparation time of VMs
+   was not correct.
+
+Changes:
+1. A provisioner "VMTestProvisioner" for testing VM allocation and preparation
+   overhead has been added.
+2. Some output text and format have been changed for better readability.
+

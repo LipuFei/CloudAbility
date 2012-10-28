@@ -19,6 +19,13 @@ import org.koala.internals.SSHHandler;
  * This runnable class is responsible for allocating and monitoring a VM
  * instance to make sure that it is ready before it is added into the resource
  * list.
+ * The VMAgent performs four steps to make sure a VM instance is ready:
+ *   (1) allocates a new VM instance;
+ *   (2) keeps checking its state until it is RUNNING;
+ *   (3) keeps pinging the VM instance until it is reachable;
+ *   (4) keeps SSHing the VM instance until it is reachable.
+ * After all four steps succeeded, this VM instance is ready and is put into the
+ * resource pool.
  * @author Lipu Fei
  * @version 0.1
  *
@@ -29,8 +36,8 @@ public class VMAgent implements Runnable {
 
 	/* default timeout is 2 minutes */
 	private final static long defaultTimeout = 2 * 60 * 1000;
-	/* default wait period is 300 milliseconds */
-	private final static long defaultWaitPeriod = 300;
+	/* default wait period is 1 second */
+	private final static long defaultWaitPeriod = 1000;
 
 
 	/* (non-Javadoc)

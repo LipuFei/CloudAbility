@@ -201,7 +201,9 @@ public class CentralManager {
 			}
 		}
 
-		String msg = String.format(
+		String msg = "========================================";
+		logger.info(msg);
+		msg = String.format(
 				"Jobs in pending queue: %d.", pendingJobs);
 		logger.info(msg);
 		msg = String.format(
@@ -212,6 +214,8 @@ public class CentralManager {
 		logger.info(msg);
 		msg = String.format(
 				"VMAgents running: %d.", vmAgents);
+		logger.info(msg);
+		msg = "========================================";
 		logger.info(msg);
 
 		/* save to statistics manager */

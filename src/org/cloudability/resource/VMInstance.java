@@ -16,6 +16,7 @@ import org.w3c.dom.Document;
 import org.cloudability.adapter.Adapter;
 import org.cloudability.analysis.Profiler;
 import org.cloudability.analysis.Recorder;
+import org.cloudability.analysis.StatisticsManager;
 
 /**
  * The VM instance object.
@@ -177,6 +178,9 @@ public class VMInstance {
 		/* profiling */
 		this.getProfiler().mark("idleTime");
 		this.getProfiler().mark("deadTime");
+
+		StatisticsManager.instance().addVMProfiler(id, profiler);
+		StatisticsManager.instance().addFinalizedVM();
 	}
 
 

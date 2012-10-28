@@ -7,7 +7,6 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.cloudability.scheduling.Job;
-import org.cloudability.scheduling.JobState;
 
 /**
  * Simple request parser. The syntax is in the form
@@ -18,12 +17,6 @@ import org.cloudability.scheduling.JobState;
  *
  */
 public class SimpleJobRequestParser extends JobRequestParser {
-
-	/**
-	 * Constructor.
-	 */
-	public SimpleJobRequestParser() {
-	}
 
 	@Override
 	public Job parse(String content) throws JobRequestSyntaxException {

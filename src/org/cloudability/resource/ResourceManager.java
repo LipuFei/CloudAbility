@@ -18,6 +18,7 @@ import org.cloudability.resource.VMState;
 import org.cloudability.resource.policy.Provisioner;
 import org.cloudability.resource.policy.SimpleElasticProvisioner;
 import org.cloudability.resource.policy.StaticProvisioner;
+import org.cloudability.resource.policy.VMTestProvisioner;
 import org.cloudability.util.CloudConfigException;
 import org.cloudability.util.CloudLogger;
 
@@ -77,7 +78,10 @@ public class ResourceManager {
 				CentralManager.instance().getConfigMap();
 		String provisionerName = configMap.get("PROVISION.POLICY");
 
-		if (provisionerName.equals("STATIC")) {
+		if (provisionerName.equals("VM_TEST")) {
+			_instance.provisioner = new VMTestProvisioner();
+		}
+		else if (provisionerName.equals("STATIC")) {
 			_instance.provisioner = new StaticProvisioner();
 		}
 		else if (provisionerName.equals("SIMPLE_ELASTIC")) {
@@ -112,7 +116,6 @@ public class ResourceManager {
 			while (itrVM.hasNext()) {
 				VMInstance vm = itrVM.next();
 				vm.terminate();
-				StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
 			}
 
 			_instance.vmList.clear();
@@ -147,9 +150,6 @@ public class ResourceManager {
 							itr.remove();
 
 							logger.debug("VM removed.");
-
-							StatisticsManager.instance().addVMProfiler(vm.getId(), vm.getProfiler());
-							StatisticsManager.instance().addFinalizedVM();
 						}
 					}
 				}
