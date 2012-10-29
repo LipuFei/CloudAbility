@@ -81,6 +81,7 @@ public class StatisticsManager {
 
 	public void recordJob(Job job) {
 		this.jobStatisticsMap.put(job.getId(), job.summarize());
+		this.addFinishedJob();
 	}
 
 	public void recordUnfinishedJob(Job job) {

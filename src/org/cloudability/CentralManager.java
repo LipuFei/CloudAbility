@@ -55,7 +55,7 @@ public class CentralManager {
 		/* initialize the configuration map */
 		this.configMap = CloudConfig.parseFile(configFilePath);
 
-		this.jobExecutorService = Executors.newScheduledThreadPool(10);
+		this.jobExecutorService = Executors.newCachedThreadPool();
 
 		this.pendingJobQueue = new JobQueue();
 	}
@@ -93,10 +93,12 @@ public class CentralManager {
 		itr = _instance.runningJobQueue.iterator();
 		while (itr.hasNext()) {
 			Job job = itr.next();
-			if (job.getState() == JobState.FINISHED)
+			if (job.getState() == JobState.FINISHED) {
 				StatisticsManager.instance().recordJob(job);
-			else
+			}
+			else {
 				StatisticsManager.instance().recordUnfinishedJob(job);
+			}
 			itr.remove();
 		}
 		itr = _instance.finishedJobQueue.iterator();
@@ -104,6 +106,10 @@ public class CentralManager {
 			Job job = itr.next();
 			if (job.getState() == JobState.FINISHED)
 				StatisticsManager.instance().recordJob(job);
+			else if (job.getState() == JobState.FAILED) {
+				StatisticsManager.instance().recordUnfinishedJob(job);
+				StatisticsManager.instance().addJobsFailure();
+			}
 			else
 				StatisticsManager.instance().recordUnfinishedJob(job);
 			itr.remove();

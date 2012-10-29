@@ -62,7 +62,7 @@ public class ResourceManager {
 	public ResourceManager() throws CloudConfigException {
 		this.vmList = new LinkedList<VMInstance>();
 
-		this.vmAgentExecutorService = Executors.newScheduledThreadPool(5);
+		this.vmAgentExecutorService = Executors.newCachedThreadPool();
 		this.vmAgentNumber = 0;
 	}
 

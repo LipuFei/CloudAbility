@@ -126,6 +126,7 @@ public class Scheduler implements Runnable {
 				/* handle failed jobs */
 				else if (job.getState() == JobState.FAILED) {
 					CentralManager.instance().getPendingJobQueue().addJob(job);
+					StatisticsManager.instance().addJobsFailure();
 				}
 				/* unexpected status */
 				else {

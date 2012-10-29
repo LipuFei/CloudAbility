@@ -11,6 +11,7 @@ import org.cloudability.CentralManager;
 import org.cloudability.resource.ResourceManager;
 import org.cloudability.resource.VMInstance;
 import org.cloudability.util.CloudConfigException;
+import org.cloudability.util.CloudLogger;
 
 /**
  * A simple elastic provisioner. This provisioner allocates more VMs when the
@@ -75,6 +76,7 @@ public class SimpleElasticProvisioner extends Provisioner {
 		int runningJobNumber = CentralManager.instance().getRunningJobNumber();
 		int currentVMNumber = ResourceManager.instance().getVMAgentNumber() +
 				ResourceManager.instance().getResourceNumber();
+		int currentReadyVMNumber = ResourceManager.instance().getResourceNumber();
 
 		/*
 		 * first make sure that total number of VMs should not below minimum
@@ -90,7 +92,7 @@ public class SimpleElasticProvisioner extends Provisioner {
 		 * reaches the maximum
 		 */
 		if (pendingJobNumber > pendingJobThreshold &&
-				pendingJobNumber + runningJobNumber < currentVMNumber &&
+				pendingJobNumber + runningJobNumber > currentVMNumber &&
 				currentVMNumber < maxVMs) {
 			ResourceManager.instance().allocateVM();
 		}
@@ -98,7 +100,7 @@ public class SimpleElasticProvisioner extends Provisioner {
 		 * if no pending jobs, delete one VM at a time until it reaches the
 		 * minimum
 		 */
-		else if (pendingJobNumber == 0 && currentVMNumber > minVMs) {
+		if (pendingJobNumber == 0 && currentReadyVMNumber > minVMs) {
 			/* remove the VM with the most aggregate idle time */
 			LinkedList<VMInstance> vmList = ResourceManager.instance().getVMList();
 			VMInstance vmToRemove = null;
@@ -113,24 +115,20 @@ public class SimpleElasticProvisioner extends Provisioner {
 						break;
 					}
 				}
-
-				/* find the VM with the highest aggregate idle time */
-				while (itr.hasNext()) {
-					VMInstance vm = itr.next();
-					if (vm.getJobsAssigned() == 0 &&
-							vmToRemove.updateAggregateIdleTime() < vm.updateAggregateIdleTime()) {
-						vmToRemove = vm;
-					}
-				}
 			}
 
-			if (vmToRemove != null)
+			if (vmToRemove != null) {
+				CloudLogger.getSystemLogger().info("One VM is going to be terminated.");
 				try {
 					vmToRemove.terminate();
+					ResourceManager.instance().removeVM(vmToRemove);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			} else {
+				CloudLogger.getSystemLogger().info("No VM is going to be terminated.");
+			}
 		}
 	}
 
