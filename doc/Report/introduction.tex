@@ -1,0 +1,57 @@
+\paragraph{Current situation}
+For WantCloud providing transcoding\footnotemark facilities have been
+a great source of income. Due to the popularity of the current system,
+it is overloaded because it does not scale well during peak usage. In
+the existing solution there is only one machine which handles incoming
+jobs. The overloaded system therefor has a relatively high number of
+outstanding jobs causing it to not meet the deadlines which are
+guaranteed by WantCloud's Terms-of-Use. To circumvent the shortcomings
+of using only 1 physical machine we will look into using a IaaS as our
+platform.
+
+\paragraph{Related Work}
+The pre-existing cloud environment used for the proposed system is the
+\cite{DAS4} cluster with the \cite{OpenNebula}-stack on top of
+DAS4. OpenNebula provides a low-level interface for spawning
+\emph{Virtual Machines} [VM] on which our workload can then be
+placed. 
+
+For the actual conversion of the media files the \cite{FFmpeg} program
+is being used. For the sake of implementation feasability only the
+conversion from \cite{H264} to DVD-Video is considered. This software
+is freely available for everyone to use under the GPL-license.
+
+As a method for inter-machine communication in the cluster, SSH is
+being used. SSH is available in every spawned machine by default and
+provides us the means for secure communication and file-transfer.
+
+\paragraph{Proposed solution}
+To be able to cope with demand, a new system setup has been made which
+can tap into a pre-existing cloud environment, to scale during peak
+usage and thereby load-balance the workload over multiple
+machines. For the experiment we've looked at multiple methods for
+allocation of the machine resources. By keeping statistics in our
+implementation we track the total time it takes for a submitted
+media-file to be transcoded and sent back to the submitter. This
+metric will hereafter be called the \emph{makespan} of a submitted
+job. Another metric is the cost for a job. Leasing a VM in the cloud
+costs money -- we investigate the tradeoffs between leasing more VMs
+and the effect on the makespan.  
+
+@TODO more metrics 
+
+To experiment with the proposed solution - a benchmark
+has been created which uses a predefined sample from a exponentional
+distribution to simulate arrival times for jobs. 
+
+
+\paragraph{Overview}
+In the next section we will elobarate more on the application and
+provide more background information. In section \ref{design} the
+system's design will be handled so the experiment in section
+\ref{experiment} can be understood. After the experiment we will
+discuss the findings in section \ref{experiment} and conclude in
+section \ref{conclusion}.
+
+\footnotetext{Transcoding: The process of converting a media file
+  from one format to another}
