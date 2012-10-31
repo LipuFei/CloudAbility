@@ -6,29 +6,38 @@ to use, which input files to use, etc., and the server parses the
 requests, creates a corresponding job and then put it into the pending
 job queue. The job is then waiting for dispatch by the scheduler.
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.35\textwidth]{pictures/system-arch.png}
+\caption{CloudAbility Architecture Overview}
+\label{figure_system_arch}
+\end{figure}
+
 The server part of the system consists of the following components:
 
-\paragraph{Listener} 
+\begin{enumerate}
+\item\emph{Listener}:
 The listener is responsible for accepting client requests through
 socket connection, parsing them, and put the jobs into the pending job
 queue.
-\paragraph{Scheduler} 
+\item\emph{Scheduler}:
 The scheduler is the core thread in the system. It does scheduling
 according to the given allocation and provisioning policies and
 updates current system status. It will be explained in more details in
 the later part.
-\paragraph{ResourceManager} 
-This component maintains the VM instances on the cloud.
-\paragraph{StatisticsManager} 
+\item\emph{ResourceManager}: 
+This component manages the VM instances on the cloud. It also holds the
+provisioning policy and provides a public interface to use it.
+\item\emph{StatisticsManager} 
 This module maintains all the statistics data of the system, including
 job performances, VM instance performances, etc. It also generates a
 final report when the system is shutting down.
+\end{enumerate}
 
 Our system is currently only runnable on \textsc{das-4} OpenNebula
 platform, but it can be easily modified and extended to support other
-cloud platforms because its good flexibility. It is easy to create new
-allocation and provisioning policies. All configurations are done
-through a configuration file.
+cloud platforms. It is easy to create new allocation and provisioning
+policies. All configurations are done through a configuration file.
 
 
 \subsection{Resource Management Architecture}
@@ -36,9 +45,10 @@ Some features must be explained before we go to more details.
 
 \subsubsection{Jobs}
 There are three job queues in the system: \emph{pending job queue},
-\emph{running job queue}, and \emph{finished job queue}. It will be
-executed when it is assigned to a VM instance. Its execution procedure
-is as follows:
+\emph{running job queue}, and \emph{finished job queue}. A pending job
+will be picked by the scheduler and assigned to a VM instance. Then a
+thread for executing this job is created, and the execution is done in
+the following sequence:
 
 \begin{enumerate}
 \item Downloading required files (in our case, executable tarball and
@@ -49,11 +59,11 @@ is as follows:
 \item Uploading the resulting \textsc{dvd} file to the server.
 \end{enumerate}
 
-All these operations are done through \textsc{scp} and
-\textsc{ssh}. The job thread is also responsible for collecting
-performance data, including downloading time, execution time,
-uploading time, etc., and once this job is done, it will be put into
-the \emph{finished job queue} with its state set to
+All these operations are done through \textsc{scp} and \textsc{ssh}.
+All these operations are done through either SCP of SSH. The job thread
+is also responsible for profiling its performance, including downloading
+time, execution time, uploading time, etc., and once this job is done,
+it will be put into the \emph{finished job queue} with its state set to
 \statefinished. Later scheduler will remove this job and update the
 statistics. If a job fails, its state is set to \statefailed and also put
 into the \emph{finished job queue}. The scheduler will handle these
