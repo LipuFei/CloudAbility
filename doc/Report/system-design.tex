@@ -69,9 +69,10 @@ statistics. If a job fails, it will also be put into the
 \emph{finished job queue} but with its state set to \statefailed.
 The scheduler will handle these failed jobs according to the given policy.
 
-Although the parameters are configurable for doing other tasks, our
-design is not that flexible because this execution sequence is hard
-coded in the program. We will consider using script files for job
+Although the parameters---which specifies which application to run, which
+files to download, etc.---are configurable to make it able to do other
+tasks, our design is not that flexible because this execution sequence
+is hard coded in the program. We will consider using script files for job
 execution.
 
 
@@ -132,7 +133,7 @@ be implemented.
 
 
 \subsubsection{Reliability}
-Our system keeps track on every job and VM instance. During the
+Our system keeps track of every job and VM instance. During the
 shutdown sequence, it first stops all executing jobs. Then, it
 terminates all allocated VM instances, so that no VM instance would be
 running afterwards. After that, it checks jobs in all the queues, and
@@ -140,7 +141,7 @@ put them into the statistics module, which finally creates a report
 and outputs to a file.
 
 Besides that, our system also keeps separate log files for the system
-itself and each jobs respectively. So it is easy to debug the system.
+itself and each jobs respectively.
 
 
 \subsection{System Policies}
