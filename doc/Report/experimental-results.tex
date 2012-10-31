@@ -66,7 +66,7 @@ OpenNebula:
 
 \begin{enumerate}
 \item The first three tests run the three jobs separately. Each
-  test was done 20 times, and we measure the job's running times
+  test is done 20 times, and we measure the job's running times
   (the total amount of time a job spent on its execution).
 \item In another test, we continuously allocate and release a VM
   instance for 20 times in order to measure the overhead of allocating
@@ -80,7 +80,7 @@ OpenNebula:
 \label{figure_jobbenchmark}
 \end{figure}
 
-As illustrated in Figure \ref{figure_jobbenchmark}, All three jobs takes
+As illustrated in Figure \ref{figure_jobbenchmark}, all three jobs takes
 almost the same amount of time to finish, with an average of 114.819 seconds, and there is no huge deviation from the average.
 
 \begin{figure}
@@ -90,9 +90,12 @@ almost the same amount of time to finish, with an average of 114.819 seconds, an
 \label{figure_vm_preparation_model}
 \end{figure}
 
-Figure \ref{table_vm_preparation} shows the results of our the VM allocation
-overhead test. We measured the total preparation time of a VM, which is the
-time from it is allocated until it is accessible through \textsc{SSH}.
+Figure \ref{figure_vm_preparation_model} is the model that we use to analyze
+the VM allocation overhead. We measured the total preparation time of a VM,
+which is the time from it is allocated until it is accessible through
+\textsc{SSH}. The allocation time is from the VM instance is
+allocated until its state becomes \staterunning, and the OS booting time is
+the time after that and until this VM is accessible through \textsc{SSH}.
 
 \begin{table}
 \caption{Total Preparation Time of VMs}
@@ -109,27 +112,31 @@ Average OS Booting Time & $\approx$50 seconds \\
 \end{tabular}
 \end{table}
 
-We only show the average values because the minimum and maximum values
-are close. Figure \ref{figure_vm_preparation_model} illustrates the times
-we measure in this test. The allocation time is from the VM instance is
-allocated until its state becomes \staterunning, and the OS booting time is
-the time after that and until this VM is accessible through \textsc{SSH}.
-
-The results suggest that the DAS-4 OpenNebula is efficient in
-allocating a VM instance. It only takes approximately 10 seconds to
-become RUNNING after it is allocated. However, it still needs 50
-seconds to be able to use.
+Table \ref{table_vm_preparation} shows the results of our the VM allocation
+overhead test. We only put the average values here because the minimum and
+maximum values are close. The results suggest that the DAS-4 OpenNebula
+is efficient in allocating a VM instance. It only takes approximately 10
+seconds to become RUNNING after it is allocated. However, it takes
+approximately 50 seconds for a VM to boot up its OS, which becomes the major
+overhead of allocating a new VM.
 
 
 % ========================================
 % Experiments on the Provisioning Policies
 % ========================================
+\newcommand{\STATIC}{\textsc{static}}
+\newcommand{\SE}{\textsc{se}}
+\newcommand{\SEzero}{\textsc{se-0}}
+\newcommand{\SEfive}{\textsc{se-5}}
+
 \subsection{Experiments on the Provisioning Policies}
 In this part, we use the three workloads to test the two policies. We
-will just call \textsc{static} for static policy, and \textsc{SE} for
-simple elastic policy for short, and \textsc{SE} with threshold set to
-0 will be denoted as \textsc{SE-0}. Figure \ref{figure_jobmakespan}
-illustrates the job makespans using different policies in each workload.
+use three settings here:
+\begin{enumerate}
+\item \policystatic{} with 5 VMs. We call this \STATIC{} for short.
+\item \policysimpleelastic{} that has 5 to 20 VMs, with \emph{threshold} set to 0. We call this \SEzero{} for short.
+\item \policysimpleelastic{} that has 5 to 20 VMs, with \emph{threshold} set to 5. We call this \SEfive{} for short.
+\end{enumerate}
 
 \begin{figure}[!t]
 \centering
@@ -138,21 +145,21 @@ illustrates the job makespans using different policies in each workload.
 \label{figure_jobmakespan}
 \end{figure}
 
-The brown line there is the benchmark line indicating the average
-running time of a job. As expected, for \texttt{wl-10}, SE out
-performs the STATIC both in average case and worst case, and SE-5 has
-a much better performance than SE-0. For \texttt{wl-30}, the
-performances are almost the same. This suggests that five VMs are
-enough for \texttt{wl-30}.
+Figure \ref{figure_jobmakespan} illustrates the job makespans of different
+policies in each workload. The brown line indicates the average running time
+of a job is the benchmark test. As expected, for \texttt{wl-10},
+\SE{} outperforms the \STATIC{} both in the average case
+and the worst case. \SEfive{} achieves the best job makespan for both
+\texttt{wl-10} and \texttt{wl-20}. For \texttt{wl-30}, the performances are
+almost the same, which suggests that five VMs are enough for \texttt{wl-30}.
 
-What is worth noticing is that in \texttt{wl-20}, STATIC has the best
-performance. One explanation is that, our SE policy terminates an idle
-VM instance once the pending job queue becomes empty. In
-\texttt{wl-20}, the arriving of jobs is neither frequent, nor slow. So
-the pending job queue could get empty for several times. This scenario
-becomes a bottleneck of our SE policy, especially SE-5, because it
-only allocates more VMs when the number of pending jobs gets higher
-than 5.
+Another observation is that, for \texttt{wl-10} and \texttt{wl-20}, the
+average job makespans are both higher than the benchmark result. In another
+test which we allocated 30 VMs, we find that there are totally 8 nodes being
+used, each of which has 4 VMs or so on it. Also, comparing the detailed
+job execution results (not present here), we find that DAS-4 OpenNebula's
+over-allocation has a great impact on the VM performance. Computation, I/O
+and network performances can all be influenced.
 
 \begin{figure}[!t]
 \centering
@@ -161,10 +168,10 @@ than 5.
 \label{figure_jobwaittime}
 \end{figure}
 
-Figure \ref{figure_jobwaittime} shows the waiting times of jobs. In
-\texttt{wl-20}, ES-0 has a lower waiting time than STATIC, however the
-overall makespan is higher. The makespan may be dragged down by the
-uploading and download overheads.
+For \texttt{wl-20}, Figure \ref{figure_jobwaittime} shows that \SEzero{} has
+the lowest job waiting time, however from \ref{figure_jobmakespan}, we
+see that the job makespans are the highest. We believe that this slowdown
+may be caused by DAS-4 OpenNebula's over-allocation of VMs.
 
 \begin{figure}[!t]
 \centering
@@ -173,9 +180,9 @@ uploading and download overheads.
 \label{figure_workloadmakespan}
 \end{figure}
 
-Looking at the total makespans of each workload in Figure
-\ref{figure_workloadmakespan}, we observe that in \texttt{wl-10} and
-\texttt{wl-20}, SE works better than STATIC.
+The total makespans of each workload, which is depicted in Figure
+\ref{figure_workloadmakespan}, also suggests that \SE{}
+achieves much better performance than \STATIC{} for \texttt{wl-10}.
 
 
 % ========================================
@@ -199,17 +206,19 @@ Utilization = \frac{\sum{T_{running\_jobs}}}{\sum{T_{lifetime}}}
 \label{figure_vm_util}
 \end{figure}
 
-The results are depicted in Figure \ref{figure_vm_util}. Although in
-\texttt{wl-10} and \texttt{wl-20}, the utilization levels of SE are
-lower than STATIC, the decrements are acceptable. This suggests that
-SE can utilize the VMs relatively efficiently.
+The results are illustrated in Figure \ref{figure_vm_util}. Although in
+\texttt{wl-10} and \texttt{wl-20}, the utilization levels of \SE{} are
+lower than \STATIC{}, the decrements are acceptable. \SE{} can utilize
+the VMs relatively efficiently.
 
-Due to SE's feature that it terminates an idle VM as soon as there is
-no pending jobs, we would also like to analyze its drawback and
-overhead. For doing this, we measure the number of wasted VMs by using
-SE. A VM can be wasted in this scenario: suppose we are using SE-0,
+Due to \SE{}'s feature that it terminates an idle VM as soon as there is
+no pending jobs, we would also like to analyze its drawback.
+For doing this, we measure the number of wasted VMs by using \SE{}.
+A \emph{wasted VM} is a VM that has not got any job running on it during
+its whole lifetime.
+A VM can be wasted in this scenario: suppose we are using \SEzero{},
 and there are 5 VMs in the system with 5 jobs running on them
-respectively. Then a new job comes, and SE-0 will allocate a new VM,
+respectively. Then a new job comes, and \SEzero{} will allocate a new VM,
 say $VM_{new}$. However, before $VM_{new}$ becomes available, one
 running job has been finished, which means a VM becomes idle, and this
 new job is then assigned to this free VM. So, when $VM_{new}$ is
@@ -218,8 +227,9 @@ $VM_{new}$ is terminated. In this case, no job has been running on
 $VM_{new}$ during its lifetime, and we say that $VM_{new}$ is wasted.
 
 In Figure \ref{figure_vm_wasted}, we can see that in \texttt{wl-10},
-SE-5 gets a surprisingly low number of wasted VMs, while the number of
-SE-0 is as high as 60\%.
+the number of \SEzero is as high as 23, while \SEfive has no wasted VM
+at all. \SEfive also has a low number of wasted VMs in the other two cases,
+no exceeding 3.
 
 \begin{figure}[!t]
 \centering
@@ -261,20 +271,22 @@ Workload & STATIC & SE-0 & SE-5 \\
 \caption{Speedups and Costs for wl-10}
 \label{table_speedupcost}
 \centering
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{c|c|c|c|c|}
+\cline{2-5}
+ & \multicolumn{2}{c|}{\texttt{wl-10}} & \multicolumn{2}{c|}{\texttt{wl-20}} \\
+\cline{2-5}
+ & \SEzero & \textbf{\SEfive} & \SEzero & \textbf{\SEfive} \\
 \hline
- & SE-0 & SE-5 \\
+\multicolumn{1}{|c|}{Speedup} & 1.28 & \textbf{1.52} & 1.00 & \textbf{1.00} \\
 \hline
-Speedup & 1.28 & 1.52 \\
-\hline
-Cost & 1.86 & 1.78 \\
+\multicolumn{1}{|c|}{Cost} & 1.86 & \textbf{1.78} & 1.61 & \textbf{1.13} \\
 \hline
 \end{tabular}
 \end{table}
 
 We mainly focus on the results of \texttt{wl-10}, because this is the
-only case that SE outperforms STATIC. From Table
-\ref{table_speedupcost}, we can see that only SE-5 is close to
-cost-speed proportional in \texttt{wl-10}. The results suggest that
-the cost is usually higher than the performance you can gain. It is
-not an easy task to achieve a cost-efficient cloud application.
+only case that \SE outperforms \STATIC. From Table
+\ref{table_speedupcost}, we can see that only \SEfive is close to
+cost-speed proportional in both \texttt{wl-10} and \texttt{wl-20}.
+The results suggest that it is not an easy task to achieve
+cost-efficiency even in a simple cloud system.
