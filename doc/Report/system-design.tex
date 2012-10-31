@@ -60,14 +60,11 @@ the following sequence:
 \end{enumerate}
 
 All these operations are done through \textsc{scp} and \textsc{ssh}.
-All these operations are done through either SCP of SSH. The job thread
-is also responsible for profiling its performance, including downloading
-time, execution time, uploading time, etc., and once this job is done,
-it will be put into the \emph{finished job queue} with its state set to
+The job thread is also responsible for profiling its performance, including downloading time, execution time, uploading time, etc. Once this job is done, it will be put into the \emph{finished job queue} with its state set to
 \statefinished. Later scheduler will remove this job and update the
-statistics. If a job fails, its state is set to \statefailed and also put
-into the \emph{finished job queue}. The scheduler will handle these
-failed jobs according to the given policy.
+statistics. If a job fails, it will also be put into the
+\emph{finished job queue} but with its state set to \statefailed.
+The scheduler will handle these failed jobs according to the given policy.
 
 Although the parameters are configurable for doing other tasks, our
 design is not that flexible because this execution sequence is hard
@@ -76,15 +73,14 @@ execution.
 
 
 \subsubsection{VM instances}
-The VM instances are created asynchronously. In OpenNebula, after a VM
-instance is allocated, its state becomes \statepending, and you need
-to wait until it is \staterunning. At this point, the VM instance is
-actually running. However, it is not actually \emph{ready} because
-when it becomes \staterunning, it still needs some time to boot the OS and
-initialize the system. Only after the system is fully booted can the
-VM instance be accessed using \textsc{ssh} to execute jobs.
+In OpenNebula, after a VM instance is allocated, its state becomes
+\statepending, and you need to wait until it is \staterunning.
+At this point, the VM instance is running, but it may not be actually
+\emph{ready} because when it becomes \staterunning, it still needs some
+time to boot the OS and initialize the system. Only after the system is
+fully booted can the VM instance be accessed using \textsc{ssh}.
 
-In our system, we use an asynchronous way to create a VM instance: a
+In our system, a VM instance is created asynchronously: a
 thread called ``VMAgent'' is created every time the system allocates a
 VM instance. This thread first allocates the VM instance, and then
 does the following things:
