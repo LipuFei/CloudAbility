@@ -1,1 +1,29 @@
-For the experiment 
+The application will take \textsc{h264} formatted video files as input
+and output them to \textsc{dvd}-video formatted files by making use of
+an IaaS provider. End-users upload their \textsc{h264} formatted file
+to a front-end server - which is running our application - which in
+its turn makes a job for this file and sends it to a VM at the
+IaaS-provider based on the chosen allocation-policy. Because 1 job can
+fully utilize 1 VM considering its \textsc{CPU} intensive nature, the
+allocation-policy considers a VM free for taking only if it has
+no current job being run on it. New VMs will be spawned if the
+provisioner considers there to be a shortage of free VMs. 
+
+\paragraph{Requirements}
+To make the proposed system a successor to the current system, our
+solution should adhere to the following requirements to be able to
+scale well for future workloads.
+
+\begin{enumerate}[i]
+\item The system should be automated for 1) The creation and
+  provisioning of the VMs (see also \ref{req:elastic}) ) 2) The
+  allocation of jobs to VMs.
+\item \label{req:elastic}Should support elastic policies to scale for
+  sudden demand without human intervention.
+\item Keep statistics so we can analyse the system for the experiment
+  and make better implementation choices for future work.
+\item The system should the means to restart when an error occurs
+  which is in our control e.g. a sudden shutdown of our server part.
+\end{enumerate}
+In the next section we will show how our system adheres to these
+requirements.
