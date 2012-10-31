@@ -28,11 +28,11 @@ described in Table \ref{table_joblist}:
 \end{table}
 
 For testing the provisioning policies, we created three different jobs
-with respect to these three files. Each job is to convert the H.264
+with respect to these three files. Each job is to convert a H.264
 1080p video file into an NTSC-DVD file. We then randomly generated
 three workloads, each of which comprises of 40 jobs. The job arrival
 times are generated using exponential distribution with three
-different parameters: 10, 20, and 30 seconds.
+different mean interval values: 10, 20, and 30 seconds.
 
 \begin{table}[!t]
   \caption{Workloads for Testings}
@@ -61,17 +61,16 @@ different parameters: 10, 20, and 30 seconds.
 % Benchmark Tests
 % ========================================
 \subsubsection{Benchmark Tests}
-First, we did some benchmark tests to measure the performance of DAS-4
-OpenNebula. The benchmark consists of four tests:
+First, we did four benchmark tests to measure the performance of DAS-4
+OpenNebula:
 
 \begin{enumerate}
-\item The first three tests are using ffmpeg to convert the three
-  video files separately. Each test was done by 20 times, and we
-  measure the job's running times (the total amount of time a job
-  spent on its execution).
-\item Another test is continuously allocating and releasing a VM
-  instance, in order to measure the overhead of allocating a VM
-  instance on DAS-4.
+\item The first three tests run the three jobs separately. Each
+  test was done 20 times, and we measure the job's running times
+  (the total amount of time a job spent on its execution).
+\item In another test, we continuously allocate and release a VM
+  instance for 20 times in order to measure the overhead of allocating
+  a VM instance on DAS-4.
 \end{enumerate}
 
 \begin{figure}[!t]
@@ -81,16 +80,19 @@ OpenNebula. The benchmark consists of four tests:
 \label{figure_jobbenchmark}
 \end{figure}
 
-As illustrated in Figure \ref{figure_jobbenchmark}, it is obvious that
-the performances of all jobs are almost the same, with an average of
-114.819 seconds. The maximum and minimum values are also close to the
-averages.
+As illustrated in Figure \ref{figure_jobbenchmark}, All three jobs takes
+almost the same amount of time to finish, with an average of 114.819 seconds, and there is no huge deviation from the average.
 
-For the VM allocation overhead test, we continuous allocate and
-release a VM instance for 20 times, and we measure its total
-preparation time, which is from the time it is allocated until the
-time it is accessible through SSH. The results are shown in Table
-\ref{table_vm_preparation}.
+\begin{figure}
+\centering
+\includegraphics[width=0.35\textwidth]{pictures/vm-preparation-model.png}
+\caption{VM Preparation Model}
+\label{figure_vm_preparation_model}
+\end{figure}
+
+Figure \ref{table_vm_preparation} shows the results of our the VM allocation
+overhead test. We measured the total preparation time of a VM, which is the
+time from it is allocated until it is accessible through \textsc{SSH}.
 
 \begin{table}
 \caption{Total Preparation Time of VMs}
@@ -108,9 +110,10 @@ Average OS Booting Time & $\approx$50 seconds \\
 \end{table}
 
 We only show the average values because the minimum and maximum values
-are close to it. The allocation time is from the VM instance is
-allocated until its state becomes RUNNING, and the OS booting time is
-the time after that and until this VM is accessible through SSH.
+are close. Figure \ref{figure_vm_preparation_model} illustrates the times
+we measure in this test. The allocation time is from the VM instance is
+allocated until its state becomes \staterunning, and the OS booting time is
+the time after that and until this VM is accessible through \textsc{SSH}.
 
 The results suggest that the DAS-4 OpenNebula is efficient in
 allocating a VM instance. It only takes approximately 10 seconds to
@@ -123,10 +126,10 @@ seconds to be able to use.
 % ========================================
 \subsection{Experiments on the Provisioning Policies}
 In this part, we use the three workloads to test the two policies. We
-will just call STATIC for static policy, and SE for simple elastic
-policy for short, and SE with threshold set to 0 will be denoted as
-SE-0. Figure \ref{figure_jobmakespan} illustrates the job makespans
-using different policies in each workload.
+will just call \textsc{static} for static policy, and \textsc{SE} for
+simple elastic policy for short, and \textsc{SE} with threshold set to
+0 will be denoted as \textsc{SE-0}. Figure \ref{figure_jobmakespan}
+illustrates the job makespans using different policies in each workload.
 
 \begin{figure}[!t]
 \centering
@@ -247,7 +250,7 @@ Workload & STATIC & SE-0 & SE-5 \\
 \hline
 \texttt{wl-10} & 1.54hrs (\$0.246) & 2.86hrs (\$0.458) & 2.73hrs (\$0.437) \\
 \hline
-\texttt{wl-20} & 1.44hrs (\$0.230) & 2.32hrs (\$0.371) & 2.13hrs (\$0.341) \\
+\texttt{wl-20} & 1.44hrs (\$0.230) & 2.32hrs (\$0.371) & 1.62hrs (\$0.259) \\
 \hline
 \texttt{wl-30} & 2.13hrs (\$0.341) & 2.18hrs (\$0.349) & 2.13hrs (\$0.341) \\
 \hline
