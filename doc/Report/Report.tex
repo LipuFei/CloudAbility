@@ -4,8 +4,31 @@
 \usepackage[pdftex]{graphicx}
 \usepackage{cite}
 \usepackage{enumerate}
+
 % Document start
 \begin{document}
+
+\newcommand{\staterunning}{
+  \textsc{running}
+}
+\newcommand{\statepending}{
+  \textsc{pending}
+}
+
+\newcommand{\statefinished}{
+  \textsc{finished}
+}
+\newcommand{\statefailed}{
+  \textsc{failed}
+}
+
+\newcommand{\policystatic}{
+  \textsc{static}
+}
+\newcommand{\policysimpleelastic}{
+  \textsc{simple elastic}
+}
+
 
 % Title and authors.
 \title{Report for IN4392 Large Lab}
@@ -24,7 +47,10 @@
   provides an online video-transcoding application for users. The
   platform, which we call \emph{CloudAbility}, utilizes elastic cloud
   resource provisioning and allocation to make it scalable in
-  performance. In the experiment we show that CloudAbility.
+  performance. In the experiment we show that CloudAbility can lower
+  the waiting time for jobs compared to the current system at
+  WantCloud. At the same time the proposed solution does not increase
+  costs more than proportional to the jobs.
 \end{abstract}
 
 % Section 1 - Introduction

@@ -1,13 +1,14 @@
-The application will take \textsc{h264} formatted video files as input
-and output them to \textsc{dvd}-video formatted files by making use of
-an IaaS provider. End-users upload their \textsc{h264} formatted file
-to a front-end server - which is running our application - which in
-its turn makes a job for this file and sends it to a VM at the
-IaaS-provider based on the chosen allocation-policy. Because 1 job can
-fully utilize 1 VM considering its \textsc{CPU} intensive nature, the
-allocation-policy considers a VM free for taking only if it has
-no current job being run on it. New VMs will be spawned if the
-provisioner considers there to be a shortage of free VMs. 
+The application will take \textsc{h.264} formatted video files as
+input and output them to \textsc{ntsc-dvd} formatted files by making
+use of an IaaS provider. End-users upload their \textsc{h.264}
+formatted file to a front-end server - which is running our
+application - which in its turn makes a job for this file and sends it
+to a VM at the IaaS-provider based on the chosen
+allocation-policy. Because 1 job can fully utilize 1 VM considering
+its \textsc{CPU} intensive nature, the allocation-policy considers a
+VM free for taking only if it has no current job being run on it. New
+VMs will be spawned if the provisioner considers there to be a
+shortage of free VMs.
 
 \paragraph{Requirements}
 To make the proposed system a successor to the current system, our
