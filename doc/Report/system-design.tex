@@ -157,11 +157,11 @@ earliest arrival time.
 We implemented two provisioning policies: \policystatic{} policy and
 \policysimpleelastic{} policy.
 
-\policystatic{} policy allocated a fixed number of VM instances when the
+The \policystatic{} policy allocates a fixed number of VM instances when the
 system starts, and this number will not vary over time. This policy
 can not adapt itself to the changing environment.
 
-\policysimpleelastic{} policy is an on-demand-like elastic policy, which has
+The \policysimpleelastic{} policy is an on-demand-like elastic policy, which has
 three parameters:
 
 \begin{itemize}
@@ -174,15 +174,15 @@ three parameters:
 \end{itemize}
 
 Each time the system statuses have been updated by the scheduler, this
-provisioner is called, and it checks the number of pending jobs. If
+provisioner is called and it checks the number of pending jobs. If
 this number is larger than the \emph{threshold}, it creates one more
-VM instance until (1) either the total number of VM instances in the
+VM instance until either (1) the total number of VM instances in the
 system equals the sum of pending jobs and running jobs or (2) it reaches
 the \emph{maxvms}. However, when the pending job queue becomes empty,
 this policy will find one idle VM instance and release it.
 
-It elastic policy is a simple on-demand policy is because it doesn't
-take into account how long a VM instance has been idle. It simply
+The \policysimpleelastic{} policy is a simple on-demand policy is because
+it doesn't take into account how long a VM instance has been idle. It simply
 terminates one if it is currently idle. A main drawback of this policy
 can be illustrated in this example: suppose there are 7 jobs running,
 no pending jobs, and 8 VMs in the system. So this policy will remove
