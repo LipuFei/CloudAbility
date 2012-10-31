@@ -1,5 +1,7 @@
 \documentclass[10pt, a4paper, twoside, twocolumn, technote]{IEEEtran}
-\usepackage[utf8x]{inputenc} \usepackage[T1]{fontenc}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[pdftex]{graphicx}
 \usepackage{cite}
 \usepackage{enumerate}
 % Document start
@@ -35,11 +37,11 @@
 
 % Section 3 - System Design
 \section{System Design}\label{design}
-This is system design section.
+\input{system-design.tex}
 
 % Section 4 - Experimental Results
 \section{Experimental Results}\label{experiment}
-This is experimental results section.
+\input{experimental-results.tex}
 
 % Section 5 - Experimental Results
 \section{Discussion}\label{discussion}
