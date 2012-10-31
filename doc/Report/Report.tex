@@ -1,6 +1,7 @@
 \documentclass[10pt, a4paper, twoside, twocolumn, technote]{IEEEtran}
 \usepackage[utf8x]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[pdftex]{graphicx}
 \usepackage{cite}
 
 % Document start
@@ -33,12 +34,10 @@ This is introduction section.
 This is background on application section.
 
 % Section 3 - System Design
-\section{System Design}
-This is system design section.
+\input{system-design.tex}
 
 % Section 4 - Experimental Results
-\section{Experimental Results}
-This is experimental results section.
+\input{experimental-results.tex}
 
 % Section 5 - Experimental Results
 \section{Discussion}
@@ -50,22 +49,6 @@ This is conclusion section.
 
 % Appendix A - Time Sheets
 \appendix[Time Sheets]
-\begin{table}
-\caption{Time Sheet Table for the Whole Lab Exercise}
-\centering
-\begin{tabular}{l|l}
-\hline
-Parts       & Time \\
-\hline
-total-time  & \\
-think-time  & \\
-dev-time    & \\
-xp-time     & \\
-write-time  & \\
-wasted-time & \\
-\hline
-\end{tabular}
-\end{table}
 
 % Bibliographies
 \bibliographystyle{IEEEtran}
