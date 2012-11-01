@@ -21,15 +21,16 @@ overloaded.
 %% drawbacks of SimpleElastic provisioning (VM waste)
 %% -- added by Lipu Fei, please check
 
-What is interesting to see is that the \SEzero{} has higher makespan for
-the 20ms mean interval, but not for the 10ms and 30ms mean interval,
-This can be explained as mentioned in \ref{section_vm_performance} that
-an obvious drawback of our \policysimpleelastic{} provisioning policy
-is that it can waste allocated VMs.  Especially for \SEzero{}, in the
+What is interesting to see is that the \SEzero{} has higher makespan
+for the 20ms mean interval, but not for the 10ms and 30ms mean
+interval, This can be explained as mentioned
+in \ref{section_vm_performance} that an obvious drawback of
+our \policysimpleelastic{} provisioning policy is that it can waste
+allocated VMs.  Especially for \SEzero{}, in the
 workload \textsc{wl-10} it has a significant overhead. This is mainly
 caused by the immediate termination of VMs when no pending job
-available. An improvement can be made by adding an \emph{aggregate idle
-  time}, indicating how long a VM has been idle since (1) it was
+available. An improvement can be made by adding an \emph{aggregate
+idle time}, indicating how long a VM has been idle since (1) it was
 created or (2) the last time it finished a job, and also setting up a
 new threshold. When the pending job queue is empty, the provisioning
 policy updates all VMs' \emph{aggregate idle time} and terminates a VM
@@ -49,8 +50,8 @@ a more simple implementation.
 A different method of lowering the waiting time for the jobs due to
 free VM scarcity would be to follow the strategies outlined
 by \cite{Shen:2011:CER:2038916.2038921}, they proposed a prediction
-algorithm which can be used in future work to create new VMs in a
-more timely manner so the job waiting time will be reduced.
+algorithm which can be used in future work to create new VMs in a more
+timely manner so the job waiting time will be reduced.
 
 %% Some other discussions
 %% -- added by Lipu Fei, please check
@@ -60,19 +61,19 @@ conventional size of a \textsc{h.264} movie. If the time it takes for
 a video to convert goes linearly with the size of the input file, then
 a 4GB will probably take more than 40 minutes to finish with our
 current VM setup. An enhancement to this would be to create a
-decentralized system that works in the following way: when a job arrives,
-the system assigns it to a VM. The VM first checks the size of the
-input, and it divides the input file into two (or more) equal-sized
-parts if the original size is too large.  The smaller parts are then
-sent to other VMs, who process the input in the same way. When the
-size is small enough, a VM will convert the input. This VM can be
-considered a leaf node in the tree of VMs. All parent nodes will wait
-for their child nodes to finish and upload the results, and then merge
-them in order. Finally, the root node will get all the merged
-results. We think this is doable, for \textsc{FFmpeg} is very efficient
-in concatenating two video files. Through this method not only would
-our application scale in the number of jobs, but also scale in the
-size of individual jobs.
+decentralized system that works in the following way: when a job
+arrives, the system assigns it to a VM. The VM first checks the size
+of the input, and it divides the input file into two (or more)
+equal-sized parts if the original size is too large.  The smaller
+parts are then sent to other VMs, who process the input in the same
+way. When the size is small enough, a VM will convert the input. This
+VM can be considered a leaf node in the tree of VMs. All parent nodes
+will wait for their child nodes to finish and upload the results, and
+then merge them in order. Finally, the root node will get all the
+merged results. We think this is doable, for \textsc{FFmpeg} is very
+efficient in concatenating two video files. Through this method not
+only would our application scale in the number of jobs, but also scale
+in the size of individual jobs.
 
 %% about future work, may be put into another paragraph
 %% -- added by Lipu Fei, please check
