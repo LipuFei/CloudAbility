@@ -262,34 +262,10 @@ the results.
 Workload & STATIC & SE-0 & SE-5 \\
 \hline
 \texttt{wl-10} & 1.54hrs (\$0.246) & 2.86hrs (\$0.458) & 2.73hrs (\$0.437) \\
-workspan (min)&18.43 &14.36 &12.09\\
-\cline{2-4}
-&\multicolumn{3}{|c|}{extrapolated with workspan runtime}\\
-\cline{2-4}
-&1d  (\$19.22 )&1d (\$45.93)&1d (\$52.05)\\
-&1m (\$576.63)&1m (\$1377.83)&1m (\$1561,48)\\
-&1y (\$7015.60)&1y (\$16763.56)&1y (\$18998.11)\\
 \hline
 \texttt{wl-20} & 1.44hrs (\$0.230) & 2.32hrs (\$0.371) & 1.62hrs (\$0.259) \\
-workspan (min)& 17.31&17.24 &17.24\\
-\cline{2-4}
-&\multicolumn{3}{|c|}{extrapolated with workspan runtime}\\
-\cline{2-4}
-&1d (\$19.13)&1d (\$30.99)&1d (\$21.63)\\
-&1m (\$574.00)&1m (\$929.65)&1m (\$649.00)\\
-&1y (\$6983.71)&1y (\$11310.76)&1y (\$7896.19)\\
 \hline
 \texttt{wl-30} & 2.13hrs (\$0.341) & 2.18hrs (\$0.349) & 2.13hrs (\$0.341) \\
-workspan (min)&25.59 &25.55 &25.57\\
-
-\cline{2-4}
-&\multicolumn{3}{|c|}{extrapolated with workspan runtime}\\
-\cline{2-4}
-
-&1d (\$19.19)&1d (\$19.67)&1d (\$19.20)\\
-&1m (\$575.66)&1m (\$590.09)&1m (\$576.11)\\
-&1y (\$7003.89)&1y (\$7179.4)&1y (\$7009.37)\\
-
 \hline
 \end{tabular}
 \end{table}
@@ -318,9 +294,4 @@ cost-speed proportional in both \texttt{wl-10} and \texttt{wl-20}.
 The results suggest that it is not an easy task to achieve
 cost-efficiency even in a simple cloud system.
 
-If we extrapolate the numbers we get the numbers in Table
-\ref{table_chargedcosts}. The numbers have been calculated by taking
-the costs of the workloads extrapolated over their workspan time,
-i.e. the costs which would have incurred if the tests were run
-repeatedly for the designated extrapolated time period.
 
