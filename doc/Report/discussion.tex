@@ -13,8 +13,58 @@ policy and due to the almost equally sized jobs and
 \textsc{fcfs}-policy - the job which is added when the queue is largest
 will also have the largest makespan.
 
+%% tradeoffs -- added by Lipu Fei, please check
+The tradeoff table \ref{table_speedupcost} shows that our
+\policysimpleelastic{} policy achieves a better speedup-cost tradeoff
+with its \emph{threshold} set to 5. However, our workloads for testing
+are relatively simple, so it could get worse when the system is more
+overloaded.
 
-%%tradeoffs
+%% drawbacks of SimpleElastic provisioning (VM waste)
+%% -- added by Lipu Fei, please check
+As mentioned in \ref{section_vm_performance}, an obvious drawback of our
+\policysimpleelastic{} provisioning policy is that it can waste allocated VMs.
+Especially for \SEzero{}, in the workload \textsc{wl-10} it has a significant
+overhead. This is mainly caused by the immediate termination of VMs when
+no pending job available. A improvement can be adding an
+\emph{aggregate idle time} indicating how long a VM has been idle since (1)
+it was created or (2) the last time it finished a job, and also setting up
+a new threshold. When the pending job queue is empty, the provisioning policy
+updates all VMs' \emph{aggregate idle time} and terminates a VM with its'
+\emph{aggregate idle time} higher than the threshold.
+
+%% Some other discussions
+%% -- added by Lipu Fei, please check
+Besides, in reality, the video conversion jobs submitted
+byt users are probably huge files with more than 4GB, which is
+the ordinary size of a \textsc{h.264} movie. If the time a video
+conversion operation takes goes linearly with the size of the input file,
+then a 4GB may probably take more than 40 minutes to finish with our
+current VM setup. A solution to this is create a decentralized system
+that works in the this way: when a job arrives, the system assigns it to
+a VM. The VM first checks the size of the input, and it divides the input
+file into two (or more) equal-sized parts if the original size is too large.
+The smaller parts are then sent to other VMs, which processes them in the
+same way. When the size is small enough, this VM will convert it. This VM can
+be considered as a leaf node in tree. All parent nodes will wait for
+their child nodes to finish and upload the results, and then merge them
+in order. Finally, the root node will get all the merged result. We think
+this is doable for \textsc{FFmpeg} is very efficient in merging
+two video files.
+
+%% about future work, may be put into another paragraph
+%% -- added by Lipu Fei, please check
+So for future work, we are considering the following options:
+\begin{enumerate}
+\item Carrying out a benchmark test on larger input files to get the growth
+  of job's running time against input size.
+
+\item Improving the current provisioning policy with our proposed suggestion.
+
+\item Create a decentralize system that uses divide-and-conquer mechanism to
+  solve large inputs.
+
+\end{enumerate}
 
 
 
