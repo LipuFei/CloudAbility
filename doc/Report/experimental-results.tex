@@ -171,7 +171,9 @@ and network performances can all be influenced.
 For \texttt{wl-20}, Fig. \ref{figure_jobwaittime} shows that \SEzero{} has
 the lowest job waiting time, however from \ref{figure_jobmakespan}, we
 see that the job makespans are the highest. We believe that this slowdown
-may be caused by DAS-4 OpenNebula's over-allocation of VMs.
+may be caused by DAS-4 OpenNebula's over-allocation of VMs. According to
+our statistics, this slowdown can be 3.64 at max and 1.91 in average in
+\textsc{wl-10}.
 
 \begin{figure}[!t]
 \centering
@@ -216,6 +218,7 @@ no pending jobs, we would also like to analyze its drawback.
 For doing this, we measure the number of wasted VMs by using \SE{}.
 A \emph{wasted VM} is a VM that has not got any job running on it during
 its whole lifetime.
+
 A VM can be wasted in this scenario: suppose we are using \SEzero{},
 and there are 5 VMs in the system with 5 jobs running on them
 respectively. Then a new job comes, and \SEzero{} will allocate a new VM,
