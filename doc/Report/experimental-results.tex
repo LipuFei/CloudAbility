@@ -80,7 +80,7 @@ OpenNebula:
 \label{figure_jobbenchmark}
 \end{figure}
 
-As illustrated in Figure \ref{figure_jobbenchmark}, all three jobs takes
+As illustrated in Fig. \ref{figure_jobbenchmark}, all three jobs takes
 almost the same amount of time to finish, with an average of 114.819 seconds, and there is no huge deviation from the average.
 
 \begin{figure}
@@ -168,7 +168,7 @@ and network performances can all be influenced.
 \label{figure_jobwaittime}
 \end{figure}
 
-For \texttt{wl-20}, Figure \ref{figure_jobwaittime} shows that \SEzero{} has
+For \texttt{wl-20}, Fig. \ref{figure_jobwaittime} shows that \SEzero{} has
 the lowest job waiting time, however from \ref{figure_jobmakespan}, we
 see that the job makespans are the highest. We believe that this slowdown
 may be caused by DAS-4 OpenNebula's over-allocation of VMs.
@@ -180,7 +180,7 @@ may be caused by DAS-4 OpenNebula's over-allocation of VMs.
 \label{figure_workloadmakespan}
 \end{figure}
 
-The total makespans of each workload, which is depicted in Figure
+The total makespans of each workload, which is depicted in Fig.
 \ref{figure_workloadmakespan}, also suggests that \SE{}
 achieves much better performance than \STATIC{} for \texttt{wl-10}.
 
@@ -206,7 +206,7 @@ Utilization = \frac{\sum{T_{running\_jobs}}}{\sum{T_{lifetime}}}
 \label{figure_vm_util}
 \end{figure}
 
-The results are illustrated in Figure \ref{figure_vm_util}. Although in
+The results are illustrated in Fig. \ref{figure_vm_util}. Although in
 \texttt{wl-10} and \texttt{wl-20}, the utilization levels of \SE{} are
 lower than \STATIC{}, the decrements are acceptable. \SE{} can utilize
 the VMs relatively efficiently.
@@ -226,7 +226,7 @@ ready, the pending job queue is empty, and according to our policy,
 $VM_{new}$ is terminated. In this case, no job has been running on
 $VM_{new}$ during its lifetime, and we say that $VM_{new}$ is wasted.
 
-In Figure \ref{figure_vm_wasted}, we can see that in \texttt{wl-10},
+In Fig. \ref{figure_vm_wasted}, we can see that in \texttt{wl-10},
 the number of \SEzero is as high as 23, while \SEfive has no wasted VM
 at all. \SEfive also has a low number of wasted VMs in the other two cases,
 no exceeding 3.
