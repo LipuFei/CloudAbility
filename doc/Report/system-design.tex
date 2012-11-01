@@ -61,13 +61,13 @@ the following sequence:
 
 All these operations are done through \textsc{scp} and \textsc{ssh}.
 The job thread is also responsible for collecting its performance
-statistics, including downloading time, execution time, uploading time,
-etc. Once this job is done, it will be put into the
-\emph{finished job queue} with its state set to
-\statefinished. Later scheduler will remove this job and update the
-statistics. If a job fails, it will also be put into the
-\emph{finished job queue} but with its state set to \statefailed.
-The scheduler will handle these failed jobs according to the given policy.
+statistics, including downloading time, execution time, uploading
+time, etc. Once this job is done, it will be put into the
+\emph{finished job queue} with its state set to \statefinished. Later,
+the scheduler will remove this job and update the statistics. If a job
+fails, it will also be put into the \emph{finished job queue} but with
+its state set to \statefailed.  The scheduler will handle these failed
+jobs according to the given policy.
 
 Although the parameters---which specifies which application to run, which
 files to download, etc.---are configurable to make it able to do other
