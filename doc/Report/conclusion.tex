@@ -1,0 +1,17 @@
+
+In this report, we designed a system based on IaaS cloud platform for
+processing \textsc{h.264} high resolution video file conversions using
+\textsc{FFmpeg} and evaluated the its performances on \textsc{das-4}
+OpenNebula. Benchmark tests show that the performance of a single VM
+is good, but the overallocation of OpenNebula can cause significant
+VM slowdown with a maximum of 3.64 in a relatively high load situation.
+We also found that the VM allocation on \textsc{das-4} OpenNebula is
+efficient, taking only about 10 seconds in average, however, the OS
+booting up sequence requires about 50 seconds, which becomes the main
+overhead of allocating a new VM.
+The experiment results show that our \policysimpleelastic{}
+provisioning policy is capable of processing small \textsc{h.264} input
+file in a lightly loaded environment efficiently with an acceptable
+increment in charged-costs.
+
+
