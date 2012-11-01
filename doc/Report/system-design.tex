@@ -188,3 +188,15 @@ can be illustrated in this example: suppose there are 7 jobs running,
 no pending jobs, and 8 VMs in the system. So this policy will remove
 one idle VM. If a job arrives right after the policy removes a VM,
 this job has to wait for a long time to obtain an available VM.
+
+\subsection{Implementation}
+Our implementation is done in Java, and the following libraries are
+being used:
+
+\begin{itemize}
+\item Apache XML-RPC\cite{URL:ApacheXmlRpc} for implementing the module
+  that interacts with OpenNebula through its XML-RPC API.
+\item We used trilead-ssh2\cite{URL:trilead-ssh2} to establish SSH
+  and SCP connections with the VMs.
+\item Apache log4j\cite{URL:ApacheLog4j} is used for system logging.
+\end{itemize}
