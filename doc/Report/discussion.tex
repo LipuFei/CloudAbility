@@ -1,10 +1,7 @@
 
 %%main findings summary
 
-\subsection{Findings}
-In this section we will discuss the findings of the experiment.
 
-\paragraph{Makespan}
 In Fig.~\ref{figure_jobmakespan} we can see that the static allocation
 has the highest makespan, the rationale behind this, is that during
 the peak usage in the sample workload, there will be jobs that will
@@ -24,14 +21,14 @@ overloaded.
 %% drawbacks of SimpleElastic provisioning (VM waste)
 %% -- added by Lipu Fei, please check
 
-What is interesting to see is that the SE-0 has higher makespan for
-the 20ms mean interval, but not for the 10ms and 30ms mean interval
-but can be explained as mentioned in \ref{section_vm_performance} --
+What is interesting to see is that the \SEzero{} has higher makespan for
+the 20ms mean interval, but not for the 10ms and 30ms mean interval,
+This can be explained as mentioned in \ref{section_vm_performance} that
 an obvious drawback of our \policysimpleelastic{} provisioning policy
 is that it can waste allocated VMs.  Especially for \SEzero{}, in the
 workload \textsc{wl-10} it has a significant overhead. This is mainly
 caused by the immediate termination of VMs when no pending job
-available. A improvement can be made by adding an \emph{aggregate idle
+available. An improvement can be made by adding an \emph{aggregate idle
   time}, indicating how long a VM has been idle since (1) it was
 created or (2) the last time it finished a job, and also setting up a
 new threshold. When the pending job queue is empty, the provisioning
@@ -40,7 +37,7 @@ with its \emph{aggregate idle time} higher than the threshold.  A more
 structural improvement would be to see if the boot time of the VM's OS
 can be shortened. This would probably positively influence the results
 a lot, however making such adjustments to the provided IaaS in
-question -- OpenNebula on \textsc{das-4} -- is not trivial due to
+question---OpenNebula on \textsc{das-4}---is not trivial due to
 lacking permissions for such adjustments. However we could test with
 artificial boot-times by allocating the maximum amount of VMs in
 advance and then imitate the availability of the VMs after the desired
@@ -57,7 +54,7 @@ conventional size of a \textsc{h.264} movie. If the time it takes for
 a video to convert goes linearly with the size of the input file, then
 a 4GB will probably take more than 40 minutes to finish with our
 current VM setup. An enhancement to this would be to create a
-decentralized system that works in the this way: when a job arrives,
+decentralized system that works in the following way: when a job arrives,
 the system assigns it to a VM. The VM first checks the size of the
 input, and it divides the input file into two (or more) equal-sized
 parts if the original size is too large.  The smaller parts are then
@@ -66,7 +63,7 @@ size is small enough, a VM will convert the input. This VM can be
 considered a leaf node in the tree of VMs. All parent nodes will wait
 for their child nodes to finish and upload the results, and then merge
 them in order. Finally, the root node will get all the merged
-result. We think this is doable, for \textsc{FFmpeg} is very efficient
+results. We think this is doable, for \textsc{FFmpeg} is very efficient
 in concatenating two video files. Through this method not only would
 our application scale in the number of jobs, but also scale in the
 size of individual jobs.
