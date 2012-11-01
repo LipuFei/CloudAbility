@@ -18,6 +18,7 @@ are relatively simple, so it could get worse when the system is more
 overloaded.
 
 
+
 %% drawbacks of SimpleElastic provisioning (VM waste)
 %% -- added by Lipu Fei, please check
 
@@ -75,6 +76,14 @@ efficient in concatenating two video files. Through this method not
 only would our application scale in the number of jobs, but also scale
 in the size of individual jobs.
 
+If we take our workloads to be representative we can make
+extrapolations, we calculate the numbers in Table
+\ref{table_extrapolatedchargedcosts}. The numbers have been calculated by
+taking the costs of the workloads extrapolated over their workspan
+time, i.e. the costs which would have incurred if the tests were run
+repeatedly for the designated extrapolated time period.
+
+
 %% about future work, may be put into another paragraph
 %% -- added by Lipu Fei, please check
 So for future work, we are considering the following options:
@@ -97,11 +106,6 @@ So for future work, we are considering the following options:
 %%recommendation
 
 %% extrapolation
-If we extrapolate the numbers we get the numbers in Table
-\ref{table_extrapolatedchargedcosts}. The numbers have been calculated by
-taking the costs of the workloads extrapolated over their workspan
-time, i.e. the costs which would have incurred if the tests were run
-repeatedly for the designated extrapolated time period.
 
 
 \begin{table}
