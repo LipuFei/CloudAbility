@@ -78,7 +78,7 @@ execution.
 
 \subsubsection{VM instances}
 In OpenNebula, after a VM instance is created, its state becomes
-\statepending, and you need to wait until it is \staterunning.
+\statepending and you need to wait until it is \staterunning.
 At this point, the VM instance is running, but it may not be actually
 \emph{ready} because when it becomes \staterunning, it still needs some
 time to boot the OS and initialize the system. Only after the system is
@@ -86,7 +86,7 @@ fully booted can the VM instance be accessed using \textsc{ssh}.
 
 In our system, a VM instance is created asynchronously: a
 thread called ``VMAgent'' is created every time the system creates a
-VM instance. This thread first allocates the VM instance, and then
+VM instance. This thread first allocates the VM instance and then
 does the following things:
 
 \begin{enumerate}
@@ -96,7 +96,7 @@ does the following things:
 \end{enumerate}
 
 After the VM is reachable, it is added into the VM list in the
-ResourceManager, and it becomes available for jobs to execute on.
+ResourceManager and it becomes available for jobs to execute on.
 
 Each VMAgent has a timeout of two minutes. If the operation times out,
 the VM instance will be terminated.
@@ -117,7 +117,7 @@ What the scheduler does is as follows:
 In the regular check part, the scheduler does miscellaneous tasks,
 including:
 \begin{itemize}
-\item Updating job states, VM instance states, and system states.
+\item Updating job states, VM instance states and system states.
 \item Checking the \emph{finished job queue}. If a job is finished
   successfully, it is removed and its data is used to update the
   statistics. If it failed, it will be handled according to the given
@@ -127,7 +127,7 @@ including:
 \item Calling the provisioning policy to perform elastic provisioning.
 \end{itemize}
 
-In this way, the statistics of the system is continuously recorded,
+In this way, the statistics of the system is continuously recorded
 and flexible allocation policies and elastic provisioning policies can
 be implemented.
 
@@ -136,7 +136,7 @@ be implemented.
 Our system keeps track of every job and VM instance. During the
 shutdown sequence, it first stops all executing jobs. Then, it
 terminates all allocated VM instances, so that no VM instance would be
-running afterwards. After that, it checks jobs in all the queues, and
+running afterwards. After that, it checks jobs in all the queues and
 put them into the statistics module, which finally creates a report
 and outputs to a file.
 
@@ -158,7 +158,7 @@ We implemented two provisioning policies: \policystatic{} policy and
 \policysimpleelastic{} policy.
 
 The \policystatic{} policy allocates a fixed number of VM instances when the
-system starts, and this number will not vary over time. This policy
+system starts and this number will not vary over time. This policy
 can not adapt itself to the changing environment.
 
 The \policysimpleelastic{} policy is an on-demand-like elastic policy, which has
@@ -185,12 +185,12 @@ The \policysimpleelastic{} policy is a simple on-demand policy is because
 it doesn't take into account how long a VM instance has been idle. It simply
 terminates one if it is currently idle. A main drawback of this policy
 can be illustrated in this example: suppose there are 7 jobs running,
-no pending jobs, and 8 VMs in the system. So this policy will remove
+no pending jobs and 8 VMs in the system. So this policy will remove
 one idle VM. If a job arrives right after the policy removes a VM,
 this job has to wait for a long time to obtain an available VM.
 
 \subsection{Implementation}
-Our implementation is done in Java, and the following libraries are
+Our implementation is done in Java and the following libraries are
 being used:
 
 \begin{itemize}
