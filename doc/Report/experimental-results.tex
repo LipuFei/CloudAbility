@@ -2,13 +2,13 @@
 % Experimental Setups Section
 % ========================================
 \subsection{Experimental Setups}
-We carried out our experiments on DAS-4 using OpenNebula platform. The
-VM image we use is CentOS-5.4 whose image ID is 35, and our VM setup
-is CPU=1, VCPU=2, with 1024MB memory.
+We carried out our experiments on \textsc{das-4} using OpenNebula
+platform. The VM image we use is CentOS-5.4 whose image ID is 35, and
+our VM setup is CPU=1, VCPU=2, with 1024MB memory.
 
-We prepared three H.264 1080p movie trailers downloaded from Apple
-Trailers\footnote{http://trailers.apple.com/trailers/}, which are
-described in Table \ref{table_joblist}:
+We prepared three \textsc{h.264} 1080p movie trailers downloaded from
+Apple Trailers\footnote{http://trailers.apple.com/trailers/}, which
+are described in Table \ref{table_joblist}:
 
 \begin{table}[!t]
   \caption{Jobs for Testings}
@@ -18,17 +18,17 @@ described in Table \ref{table_joblist}:
     \hline
     Job Name & File Name & Encoding & File Size\\
     \hline
-    \texttt{job1} & cloudatlas-trailer1b\_h1080p.mov & H.264 1080p & 172MB \\
+    \texttt{job1} & cloudatlas-trailer1b\_h1080p.mov & \textsc{h.264} 1080p & 172MB \\
     \hline
-    \texttt{job2} & skyfall-tlr2\_h1080p.mov & H.264 1080p & 180MB \\
+    \texttt{job2} & skyfall-tlr2\_h1080p.mov & \textsc{h.264} 1080p & 180MB \\
     \hline
-    \texttt{job3} & taken2-tlr1\_h1080p.mov & H.264 1080p & 175MB \\
+    \texttt{job3} & taken2-tlr1\_h1080p.mov & \textsc{h.264} 1080p & 175MB \\
     \hline
   \end{tabular}
 \end{table}
 
 For testing the provisioning policies, we created three different jobs
-with respect to these three files. Each job is to convert a H.264
+with respect to these three files. Each job is to convert a \textsc{h.264}
 1080p video file into an NTSC-DVD file. We then randomly generated
 three workloads, each of which comprises of 40 jobs. The job arrival
 times are generated using exponential distribution with three
@@ -61,8 +61,8 @@ different mean interval values: 10, 20, and 30 seconds.
 % Benchmark Tests
 % ========================================
 \subsubsection{Benchmark Tests}
-First, we did four benchmark tests to measure the performance of DAS-4
-OpenNebula:
+First, we did four benchmark tests to measure the performance of
+\textsc{das-4} OpenNebula:
 
 \begin{enumerate}
 \item The first three tests run the three jobs separately. Each
@@ -70,7 +70,7 @@ OpenNebula:
   (the total amount of time a job spent on its execution).
 \item In another test, we continuously allocate and release a VM
   instance for 20 times in order to measure the overhead of allocating
-  a VM instance on DAS-4.
+  a VM instance on \textsc{das-4}.
 \end{enumerate}
 
 \begin{figure}[!t]
@@ -93,9 +93,9 @@ almost the same amount of time to finish, with an average of 114.819 seconds, an
 Figure \ref{figure_vm_preparation_model} is the model that we use to analyze
 the VM allocation overhead. We measured the total preparation time of a VM,
 which is the time from it is allocated until it is accessible through
-\textsc{SSH}. The allocation time is from the VM instance is
+\textsc{ssh}. The allocation time is from the VM instance is
 allocated until its state becomes \staterunning, and the OS booting time is
-the time after that and until this VM is accessible through \textsc{SSH}.
+the time after that and until this VM is accessible through \textsc{ssh}.
 
 \begin{table}
 \caption{Total Preparation Time of VMs}
@@ -112,13 +112,14 @@ Average OS Booting Time & $\approx$50 seconds \\
 \end{tabular}
 \end{table}
 
-Table \ref{table_vm_preparation} shows the results of our the VM allocation
-overhead test. We only put the average values here because the minimum and
-maximum values are close. The results suggest that the DAS-4 OpenNebula
-is efficient in allocating a VM instance. It only takes approximately 10
-seconds to become RUNNING after it is allocated. However, it takes
-approximately 50 seconds for a VM to boot up its OS, which becomes the major
-overhead of allocating a new VM.
+Table \ref{table_vm_preparation} shows the results of our the VM
+allocation overhead test. We only put the average values here because
+the minimum and maximum values are close. The results suggest that the
+\textsc{das-4} OpenNebula is efficient in allocating a VM instance. It
+only takes approximately 10 seconds to become \staterunning{} after it
+is allocated. However, it takes approximately 50 seconds for a VM to
+boot up its OS, which becomes the major overhead of allocating a new
+VM.
 
 
 % ========================================
@@ -153,13 +154,14 @@ and the worst case. \SEfive{} achieves the best job makespan for both
 \texttt{wl-10} and \texttt{wl-20}. For \texttt{wl-30}, the performances are
 almost the same, which suggests that five VMs are enough for \texttt{wl-30}.
 
-Another observation is that, for \texttt{wl-10} and \texttt{wl-20}, the
-average job makespans are both higher than the benchmark result. In another
-test which we allocated 30 VMs, we find that there are totally 8 nodes being
-used, each of which has 4 VMs or so on it. Also, comparing the detailed
-job execution results (not present here), we find that DAS-4 OpenNebula's
-over-allocation has a great impact on the VM performance. Computation, I/O
-and network performances can all be influenced.
+Another observation is that, for \texttt{wl-10} and \texttt{wl-20},
+the average job makespans are both higher than the benchmark
+result. In another test which we allocated 30 VMs, we find that there
+are totally 8 nodes being used, each of which has 4 VMs or so on
+it. Also, comparing the detailed job execution results (not present
+here), we find that \textsc{das-4} OpenNebula's over-allocation has a
+great impact on the VM performance. Computation, I/O and network
+performances can all be influenced.
 
 \begin{figure}[!t]
 \centering
@@ -168,12 +170,12 @@ and network performances can all be influenced.
 \label{figure_jobwaittime}
 \end{figure}
 
-For \texttt{wl-20}, Fig. \ref{figure_jobwaittime} shows that \SEzero{} has
-the lowest job waiting time, however from \ref{figure_jobmakespan}, we
-see that the job makespans are the highest. We believe that this slowdown
-may be caused by DAS-4 OpenNebula's over-allocation of VMs. According to
-our statistics, this slowdown can be 3.64 at max and 1.91 in average in
-\textsc{wl-10}.
+For \texttt{wl-20}, Fig. \ref{figure_jobwaittime} shows that \SEzero{}
+has the lowest job waiting time, however from
+\ref{figure_jobmakespan}, we see that the job makespans are the
+highest. We believe that this slowdown may be caused by \textsc{das-4}
+OpenNebula's over-allocation of VMs. According to our statistics, this
+slowdown can be 3.64 at max and 1.91 in average in \textsc{wl-10}.
 
 \begin{figure}[!t]
 \centering

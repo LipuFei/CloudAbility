@@ -26,7 +26,7 @@ The \texttt{wasted-time} mainly consists of the following parts:
 
 \begin{itemize}
 \item Trying to create a usable VM on \textsc{das-4}.
-\item Debugging the system problems that have something to do with DAS-4.
+\item Debugging the system problems that have something to do with textsc{das-4}.
 \item Redoing experiments due to uncontrollable system failures.
 \end{itemize}
 
@@ -36,9 +36,8 @@ The \texttt{wasted-time} mainly consists of the following parts:
 During our implementation and experiments, we find that it is very
 often to get a \textsc{ssh} host key exception while our system trying
 to connect a VM using
-\textsc{ssh}. This often happens and we've got several experiments influenced by this
-that have high number of VM failures. Since our implementation is in Java,
-we use third party \textsc{ssh} library. So we are not sure if this is caused by
-the SSH library we use or the \textsc{das-4} system itself.
-
-
+\textsc{ssh}. This happens often and we've got several experiments influenced by this
+that have a high number of VM failures. Since our implementation is in
+Java, we use a third party \textsc{ssh} library. So we are not sure if
+this is caused by the \textsc{ssh} library we use, or
+the \textsc{das-4} system itself.
