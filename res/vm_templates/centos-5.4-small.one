@@ -1,7 +1,7 @@
 NAME   = CentOS-5.4-Medium
 CPU    = 1
-VCPU   = 1
-MEMORY = 1740
+VCPU   = 2
+MEMORY = 1024
 
 OS     = [
   arch = x86_64
